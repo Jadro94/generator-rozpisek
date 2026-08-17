@@ -55,7 +55,8 @@ Parser radzi sobie z wariantami spotykanymi w praktyce:
 - pora dnia: `DZIEŃ`, `NOC`, `ŚWIT`, `WIECZÓR`, `RANEK`, `POŁUDNIE`, `ZMIERZCH` (+ numer dnia)
 - adnotacje w nawiasie: `(KONTYNUACJA, 16.06)`, `(CHWILĘ PÓŹNIEJ, 14.59)`, `(NASTĘPNEGO DNIA, 7.34)`
 - nagłówki zawinięte na dwie linie
-- numery scen z literą: `17`, `17A`, `17B`
+- numery scen z literą: `17`, `17A`, `17B`, `17AB`, a także `17 A`, `17-A`, `17/A`
+- numer zakończony kropką, nawiasem, dwukropkiem albo samą spacją: `17.` `17)` `17:` `17 `
 - prefiks `SC.` przed numerem
 - offy: `Żaneta-off`, `Olga (off)`, `Radosław Więcek – off`
 - liczebność statystów: `Mundurowy x4`, `Mundurowi x 2 z radiowozem`
@@ -83,10 +84,19 @@ tekst usunięty w recenzji jest pomijany, tak jak w widoku „Końcowy”.
 **Automatyczna numeracja Worda.** Jeśli numery scen pochodzą z listy
 numerowanej Worda, a nie są wpisane w treść, w tekście dokumentu ich nie ma —
 Word trzyma je osobno. Aplikacja to wykryje, ponumeruje sceny kolejno od 1
-i wyraźnie o tym uprzedzi. Gdy numeracja miałaby się nie zgadzać (bo np.
-odcinek zawiera scenę `17A` albo numeracja nie zaczyna się od 1), zaznacz
-w Wordzie całość, skopiuj i wklej tekst wprost do aplikacji — wtedy numery
-przeniosą się jako zwykły tekst.
+i wyraźnie o tym uprzedzi.
+
+**Dokument mieszany — numeracja Worda plus scena `8A` dopisana ręcznie.**
+To częsty układ: scenariusz numeruje lista Worda, ale scenę dostawioną między
+8 a 9 trzeba wpisać ręcznie jako `8A.`, bo lista tego nie potrafi. Aplikacja
+czyta wtedy oba rodzaje nagłówków naraz: numery wpisane w tekst zachowuje bez
+zmian, a brakujące uzupełnia po kolei, licząc od ostatniego znanego — dzięki
+czemu `8A` nie zabiera numeru 9 kolejnej scenie. Pojawia się przy tym
+ostrzeżenie, w ilu nagłówkach numer faktycznie był.
+
+Gdy numeracja miałaby się nie zgadzać (bo np. nie zaczyna się od 1),
+zaznacz w Wordzie całość, skopiuj i wklej tekst wprost do aplikacji — wtedy
+numery przeniosą się jako zwykły tekst i nic nie trzeba odtwarzać.
 
 ## Konfiguracja pod własny serial
 

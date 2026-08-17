@@ -455,29 +455,52 @@ function smartCase(upperText, properSet) {
 
 /* ------------------------------------------------------------- PARSER */
 
-// Wariant podstawowy: „12. WN. KOMENDA - RECEPCJA. DZIEŃ 2 (14.30)”
-// (dopuszczalne też „SC. 12”, „12A.”, „12)”)
+/* Jeden wzorzec obsługujący nagłówki Z numerem i BEZ numeru.
+   Numer jest opcjonalny, bo w praktyce oba warianty potrafią wystąpić w JEDNYM
+   dokumencie: scenariusz numerowany listą Worda (numery nie są częścią tekstu)
+   z dopisaną ręcznie sceną „8A.”, której lista Worda nie potrafi wygenerować.
+   Dopuszczalne zapisy numeru: 12 · 12A · 12AB · 12 A · 12-A · 12/A · SC. 12A
+   Po numerze: kropka, nawias, dwukropek albo sama spacja. */
 var HEADER_RE = new RegExp(
-  '^\\s*(?:SC\\.?\\s*)?(\\d{1,3}\\s*[A-Za-z]?)\\s*[.)]\\s*(WN\\/PL|PL\\/WN|WN|PL|PLENER|WNĘTRZE)\\b\\.?\\s*(.*)$', 'i');
-// Wariant zapasowy: nagłówek bez numeru — „WN. KOMENDA - RECEPCJA. DZIEŃ 2 (14.30)”.
-// Używany tylko wtedy, gdy wariant podstawowy nie znalazł ani jednej sceny;
-// sceny numerowane są wtedy kolejno od 1.
-var HEADER_RE_NONUM = new RegExp(
-  '^\\s*(WN\\/PL|PL\\/WN|WN|PL|PLENER|WNĘTRZE)\\b\\.?\\s*(.*)$', 'i');
+  '^\\s*(?:SC\\.?\\s*)?' +
+  '(?:(\\d{1,3}(?:\\s*[-\\/]?\\s*[A-Za-z]{1,2})?)(?:[.):]\\s*|\\s+))?' +
+  '(WN\\/PL|PL\\/WN|WN|PL|PLENER|WNĘTRZE)\\b\\.?\\s*(.*)$', 'i');
 
 function parseDrabinka(rawText, opts) {
-  opts = opts || {};
-  var first = parseWith(rawText, HEADER_RE, false);
-  if (first.scenes.length) return first;
-  var second = parseWith(rawText, HEADER_RE_NONUM, true);
-  if (second.scenes.length) {
-    second.warnings.unshift('Nagłówki nie zawierały numerów scen — ponumerowano je kolejno od 1. Sprawdź numerację.');
-    return second;
-  }
-  return first;
+  return parseWith(rawText, opts);
 }
 
-function parseWith(rawText, HEADER_RE, autoNumber) {
+/* Nadaje numery scenom. Sceny z numerem w tekście zachowują go bez zmian;
+   scenom bez numeru nadaje kolejny numer, licząc od ostatniego znanego.
+   Dzięki temu „8A” nie zjada numeru 9 następnej scenie. */
+function assignNumbers(scenes, warnings) {
+  var counter = 0, autoCount = 0;
+  scenes.forEach(function (s) {
+    if (s.rawNumber) {
+      s.number = s.rawNumber;
+      s.autoNumbered = false;
+      var base = parseInt(s.rawNumber, 10);
+      if (!isNaN(base)) counter = base;
+    } else {
+      counter += 1;
+      s.number = String(counter);
+      s.autoNumbered = true;
+      autoCount++;
+    }
+  });
+
+  if (autoCount === scenes.length && scenes.length) {
+    warnings.push('Żaden nagłówek nie zawierał numeru sceny — najpewniej numeruje je lista Worda, ' +
+      'a numery nie są częścią tekstu. Sceny ponumerowano kolejno od 1: sprawdź, czy to się zgadza.');
+  } else if (autoCount > 0) {
+    warnings.push('Numery scen znalazły się tylko w ' + (scenes.length - autoCount) + ' z ' + scenes.length +
+      ' nagłówków — pozostałe numeruje zapewne lista Worda. Brakujące uzupełniono kolejno. ' +
+      'Sprawdź szczególnie numerację wokół scen z literą (np. 8A), bo tam najłatwiej o przesunięcie.');
+  }
+  return scenes;
+}
+
+function parseWith(rawText, opts) {
   // normalizacja: konce linii, twarde spacje i lacznik nierozdzielajacy z Worda/Docsow
   var text = String(rawText || '')
     .replace(/\r\n?/g, '\n')
@@ -486,6 +509,7 @@ function parseWith(rawText, HEADER_RE, autoNumber) {
   var lines = text.split('\n');
   var scenes = [];
   var warnings = [];
+  var sceneWarnings = [];   // ostrzeżenia czekające na nadanie numerów
   var bodyChunks = [];
   var i = 0;
 
@@ -504,13 +528,13 @@ function parseWith(rawText, HEADER_RE, autoNumber) {
     m = head.match(HEADER_RE);
     if (!m) { bodyChunks.push(line); i++; continue; }
 
-    // w wariancie bez numeru grupy są przesunięte o jedną w lewo
-    var gNum = autoNumber ? null : m[1];
-    var gType = autoNumber ? m[1] : m[2];
-    var gRest = autoNumber ? m[2] : m[3];
+    var gNum = m[1], gType = m[2], gRest = m[3];
 
     var scene = {
-      number: autoNumber ? String(scenes.length + 1) : gNum.replace(/\s+/g, '').toUpperCase(),
+      // „8 A” / „8-A” / „8/a” → „8A”; brak numeru → uzupełni assignNumbers()
+      rawNumber: gNum ? gNum.replace(/[\s\-\/]+/g, '').toUpperCase() : null,
+      number: '',
+      autoNumbered: false,
       intExt: /^WN$|^WNĘTRZE$/i.test(gType) ? 'WN' : (/^PL$|^PLENER$/i.test(gType) ? 'PL' : gType.toUpperCase()),
       raw: head,
       location: '', subLocation: '', dayPart: '', dayNumber: '', time: '',
@@ -529,7 +553,7 @@ function parseWith(rawText, HEADER_RE, autoNumber) {
       var pidx = rest.indexOf('(');
       locPart = pidx > -1 ? rest.slice(0, pidx) : rest;
       tailPart = pidx > -1 ? rest.slice(pidx) : '';
-      warnings.push('Scena ' + scene.number + ': nie rozpoznano pory dnia w nagłówku.');
+      sceneWarnings.push({ scene: scene, text: ': nie rozpoznano pory dnia w nagłówku.' });
     }
 
     locPart = locPart.replace(/^[\s.,;:\-–—]+/, '').replace(/[\s.,;:\-–—]+$/, '');
@@ -559,7 +583,7 @@ function parseWith(rawText, HEADER_RE, autoNumber) {
       }
       break;
     }
-    if (castRaw == null) warnings.push('Scena ' + scene.number + ': brak listy postaci pod nagłówkiem.');
+    if (castRaw == null) sceneWarnings.push({ scene: scene, text: ': brak listy postaci pod nagłówkiem.' });
     scene.characters = parseCastLine(castRaw || '');
 
     // treść sceny — do następnego nagłówka
@@ -572,6 +596,10 @@ function parseWith(rawText, HEADER_RE, autoNumber) {
     scenes.push(scene);
     i = k;
   }
+
+  // numery nadajemy dopiero teraz — dokument może mieszać sceny z numerem i bez
+  assignNumbers(scenes, warnings);
+  sceneWarnings.forEach(function (w) { warnings.push('Scena ' + w.scene.number + w.text); });
 
   // duplikaty numerów
   var seen = {};
