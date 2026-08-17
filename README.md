@@ -1,5 +1,15 @@
 # Rozpiska — generator dokumentacji produkcyjnej
 
+### ▶ [Uruchom narzędzie](https://jadro94.github.io/generator-rozpisek/)
+
+`https://jadro94.github.io/generator-rozpisek/`
+
+Nic nie trzeba pobierać ani instalować — narzędzie otwiera się w przeglądarce.
+Kliknięcie pliku `index.html` na liście powyżej pokaże tylko kod źródłowy;
+działającą aplikację uruchamia dopiero powyższy adres.
+
+---
+
 Narzędzie zamienia drabinkę odcinka serialu w gotową rozpiskę produkcyjną:
 lista castingowa, pozostali odtwórcy, statyści, lokacje (stałe i płatne), PPS,
 pojazdy i podsumowanie — w formacie zgodnym ze wzorcem produkcyjnym.
