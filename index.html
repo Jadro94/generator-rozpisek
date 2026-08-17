@@ -1,0 +1,1941 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rozpiska — generator dokumentacji produkcyjnej</title>
+<style>
+:root{
+  --bg:#12131a; --panel:#1b1d27; --panel2:#22252f; --line:#2f3340;
+  --txt:#e8eaf0; --dim:#9aa1b1; --accent:#e0a458; --accent2:#6ea8fe;
+  --ok:#5fd08a; --warn:#e8c468; --err:#ef6f6f;
+  --radius:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Arial,sans-serif;font-size:15px;line-height:1.5}
+a{color:var(--accent2)}
+header{background:linear-gradient(180deg,#1b1d27,#161821);border-bottom:1px solid var(--line);
+  padding:14px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+header h1{font-size:17px;margin:0;font-weight:650;letter-spacing:.2px}
+header h1 span{color:var(--accent)}
+.sub{color:var(--dim);font-size:12.5px}
+nav{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+nav button{background:transparent;border:1px solid transparent;color:var(--dim);padding:7px 13px;
+  border-radius:8px;cursor:pointer;font-size:13.5px;font-weight:550;font-family:inherit}
+nav button:hover{color:var(--txt);background:#ffffff0d}
+nav button.on{background:var(--panel2);color:var(--txt);border-color:var(--line)}
+main{max-width:1180px;margin:0 auto;padding:22px 20px 90px}
+.tab{display:none}.tab.on{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:16px}
+.card h2{margin:0 0 4px;font-size:15px;font-weight:650}
+.card h2 .n{color:var(--accent);margin-right:7px}
+.card p.hint{color:var(--dim);font-size:13px;margin:0 0 14px}
+label{display:block;font-size:12.5px;color:var(--dim);margin-bottom:5px;font-weight:550}
+input[type=text],input[type=password],input[type=number],textarea,select{
+  width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+  border-radius:8px;padding:9px 11px;font-family:inherit;font-size:14px;outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--accent2)}
+textarea{resize:vertical;line-height:1.55}
+textarea.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
+button.btn{background:var(--accent);color:#20160a;border:0;border-radius:8px;padding:9px 16px;
+  font-weight:650;cursor:pointer;font-family:inherit;font-size:14px}
+button.btn:hover{filter:brightness(1.08)}
+button.btn:disabled{opacity:.45;cursor:not-allowed}
+button.btn.sec{background:var(--panel2);color:var(--txt);border:1px solid var(--line)}
+button.btn.sm{padding:5px 10px;font-size:12.5px;font-weight:550}
+button.ghost{background:transparent;border:1px solid var(--line);color:var(--dim);border-radius:6px;
+  padding:3px 8px;font-size:12px;cursor:pointer;font-family:inherit}
+button.ghost:hover{color:var(--txt);border-color:var(--accent2)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row.mt{margin-top:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:760px){.grid2,.grid3{grid-template-columns:1fr}}
+.chip{display:inline-block;background:var(--panel2);border:1px solid var(--line);border-radius:999px;
+  padding:2px 9px;font-size:11.5px;color:var(--dim);margin:2px 3px 2px 0}
+.chip.acc{border-color:var(--accent);color:var(--accent)}
+.msg{border-radius:8px;padding:10px 13px;font-size:13px;margin-bottom:12px;border:1px solid}
+.msg.ok{background:#0f2a1c;border-color:#245c3c;color:#a9e7c4}
+.msg.warn{background:#2c260f;border-color:#5e5222;color:#e8d79a}
+.msg.err{background:#2c1414;border-color:#5e2626;color:#f0aaaa}
+.msg.info{background:#141d2c;border-color:#26405e;color:#a8c6ef}
+table.scenes{width:100%;border-collapse:collapse;font-size:12.5px}
+table.scenes th{text-align:left;color:var(--dim);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line)}
+table.scenes td{padding:6px 8px;border-bottom:1px solid #ffffff0a;vertical-align:top}
+table.scenes tr:hover td{background:#ffffff06}
+.itm{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px 12px;margin-bottom:9px}
+.itm .top{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.itm .top input.nm{flex:1;min-width:150px;font-weight:600}
+.itm .top input.age{width:70px;text-align:center}
+.itm .sc{color:var(--dim);font-size:12px;margin-top:7px;font-family:ui-monospace,Menlo,monospace}
+.itm textarea{margin-top:8px;font-size:13.5px}
+.subs{margin:9px 0 0 16px;padding-left:12px;border-left:2px solid var(--line)}
+.subs .sub-row{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.subs .sub-row input{flex:1}
+.subs .sub-row .sc{color:var(--dim);font-size:12px;white-space:nowrap;font-family:ui-monospace,Menlo,monospace;margin:0}
+.preview{background:#fbfaf7;color:#1a1a1a;border-radius:8px;padding:34px 40px;
+  font-family:"Times New Roman",Georgia,serif;font-size:15px;line-height:1.65;min-height:200px}
+.preview .pt{font-weight:700;font-size:17px;margin:0 0 14px}
+.preview .ph{font-weight:700;margin:16px 0 5px}
+.preview .ph2{font-weight:600;margin:10px 0 4px;padding-left:2px}
+.preview .l1{margin:1px 0 1px 22px;text-indent:-16px}
+.preview .l2{margin:1px 0 1px 56px;text-indent:-16px}
+.preview .nt{margin:1px 0 1px 40px;color:#555;font-style:italic}
+.preview .sp{height:9px}
+.toolbar{position:sticky;bottom:0;background:linear-gradient(0deg,#12131aee,#12131ab0);
+  border-top:1px solid var(--line);padding:11px 20px;display:flex;gap:9px;flex-wrap:wrap;
+  justify-content:flex-end;margin:16px -20px -90px;backdrop-filter:blur(6px)}
+.stats{display:flex;gap:22px;flex-wrap:wrap;margin-bottom:4px}
+.stat{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:10px 15px;min-width:112px}
+.stat .v{font-size:22px;font-weight:700;color:var(--accent)}
+.stat .k{font-size:11.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
+details{border:1px solid var(--line);border-radius:8px;padding:10px 13px;margin-top:12px;background:var(--panel2)}
+summary{cursor:pointer;font-size:13.5px;font-weight:600;color:var(--dim)}
+summary:hover{color:var(--txt)}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid #ffffff30;border-top-color:var(--accent);
+  border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.kbd{font-family:ui-monospace,Menlo,monospace;background:var(--panel2);border:1px solid var(--line);
+  border-radius:4px;padding:1px 5px;font-size:12px}
+.dropzone{border:2px dashed var(--line);border-radius:10px;padding:22px;text-align:center;color:var(--dim);
+  font-size:13px;margin-bottom:12px;transition:.15s}
+.dropzone.hot{border-color:var(--accent);color:var(--accent);background:#e0a4580d}
+.badge{font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;padding:2px 7px;border-radius:5px;
+  background:#ffffff12;color:var(--dim);font-weight:700}
+.badge.ai{background:#6ea8fe22;color:var(--accent2)}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>ROZPISKA<span> ·</span> generator dokumentacji produkcyjnej</h1>
+    <div class="sub">Drabinka → lista castingowa, lokacje, PPS, pojazdy — w formacie wzorca produkcyjnego</div>
+  </div>
+  <nav>
+    <button data-tab="t1" class="on">1 · Drabinka</button>
+    <button data-tab="t2">2 · Rozpiska</button>
+    <button data-tab="t3">3 · Podgląd i eksport</button>
+    <button data-tab="t4">4 · Streszczenie</button>
+    <button data-tab="t5">Ustawienia</button>
+  </nav>
+</header>
+
+<main>
+
+<!-- ============================ TAB 1 ============================ -->
+<section id="t1" class="tab on">
+  <div class="card">
+    <h2><span class="n">1</span>Wklej drabinkę odcinka</h2>
+    <p class="hint">Wczytaj plik Word z drabinką albo wklej tekst. Aplikacja rozpoznaje nagłówki scen w formacie
+      <span class="kbd">12. WN. KOMENDA - RECEPCJA. DZIEŃ 2 (14.30)</span> oraz listę postaci w nawiasie
+      pod nagłówkiem. Dokument Word jest rozpakowywany i czytany lokalnie, w Twojej przeglądarce —
+      nic nie jest nigdzie wysyłane, dopóki sam nie uruchomisz uzupełniania przez AI.</p>
+    <div class="dropzone" id="drop">Przeciągnij tu plik <b>.docx</b> / <b>.txt</b> / <b>.rtf</b> / <b>.fdx</b> lub kliknij, aby wybrać</div>
+    <input type="file" id="file" accept=".docx,.txt,.rtf,.fdx,.md,.text" style="display:none">
+    <textarea id="src" rows="16" class="mono" placeholder="Wklej tutaj treść drabinki…"></textarea>
+    <div class="row mt">
+      <button class="btn" id="btnParse">Analizuj drabinkę</button>
+      <button class="btn sec" id="btnSample">Wczytaj przykład</button>
+      <button class="btn sec" id="btnClear">Wyczyść</button>
+    </div>
+  </div>
+  <div id="parseOut"></div>
+</section>
+
+<!-- ============================ TAB 2 ============================ -->
+<section id="t2" class="tab">
+  <div class="card">
+    <h2><span class="n">2</span>Uzupełnianie opisów <span class="badge ai">AI</span></h2>
+    <p class="hint">Numery scen, lokacje i przypisania postaci są już policzone z nagłówków — AI ich nie dotyka.
+      Model dopisuje tylko to, czego nie da się wyliczyć: opisy postaci, wiek tam gdzie go brak, treść PPS-ów,
+      pojazdy i notatki do lokacji.</p>
+    <div class="row">
+      <button class="btn" id="btnAI">Uzupełnij przez API</button>
+      <button class="btn sec" id="btnPrompt">Kopiuj prompt (tryb bez klucza API)</button>
+      <button class="btn sec" id="btnPasteJSON">Wklej odpowiedź AI</button>
+      <span id="aiStatus" class="sub"></span>
+    </div>
+    <div id="pasteBox" style="display:none;margin-top:12px">
+      <label>Wklej tu JSON zwrócony przez Claude / ChatGPT</label>
+      <textarea id="aiJSON" rows="8" class="mono" placeholder='{"postacie":[…]}'></textarea>
+      <div class="row mt"><button class="btn sm" id="btnApplyJSON">Zastosuj</button></div>
+    </div>
+  </div>
+
+  <div class="card"><h2>Lista castingowa <span class="badge">postacie stałe</span></h2>
+    <p class="hint">Rozpoznane po słowniku postaci stałych (zakładka Ustawienia). Kolejność: wg liczby scen.</p>
+    <div id="edRegulars"></div></div>
+
+  <div class="card"><h2>Pozostali odtwórcy <span class="badge">epizody</span></h2>
+    <div id="edEpisodics"></div></div>
+
+  <div class="card"><h2>Statyści</h2>
+    <div id="edExtras"></div></div>
+
+  <div class="card"><h2>Lista lokacji</h2>
+    <p class="hint">Odznacz „stała”, żeby przenieść lokację do płatnych. Nadanie dwóm sublokacjom tej samej
+      nazwy automatycznie je scala (np. „W ruchu” → „Droga / w ruchu”).</p>
+    <div id="edLocations"></div></div>
+
+  <div class="card"><h2>Lista PPS</h2>
+    <p class="hint">Wykryte automatycznie po oznaczeniach PPS1, PPS2… w treści scen.</p>
+    <div id="edPPS"></div>
+    <div class="row mt"><button class="btn sm sec" id="btnAddPPS">+ Dodaj PPS</button></div></div>
+
+  <div class="card"><h2>Lista pojazdów</h2>
+    <div id="edVehicles"></div>
+    <div class="row mt"><button class="btn sm sec" id="btnAddVeh">+ Dodaj pojazd</button></div></div>
+</section>
+
+<!-- ============================ TAB 3 ============================ -->
+<section id="t3" class="tab">
+  <div class="card">
+    <h2><span class="n">3</span>Metryczka odcinka</h2>
+    <div class="grid3">
+      <div><label>Nr odcinka w sezonie</label><input type="text" id="mEp" placeholder="59"></div>
+      <div><label>Nr globalny</label><input type="text" id="mEpG" placeholder="1274"></div>
+      <div><label>Para detektywów</label><input type="text" id="mPair" placeholder="Adam/Olga"></div>
+    </div>
+    <div class="row mt" style="display:block"><label>Tytuł odcinka</label>
+      <input type="text" id="mTitle" placeholder="Domy niespokojnej starości"></div>
+    <div class="row mt">
+      <label style="margin:0"><input type="checkbox" id="optCounts" checked style="width:auto;margin-right:7px">
+        Pokazuj liczbę scen przy postaciach stałych (<span class="kbd">Adam Bogusz – 21 (2, 3…)</span>)</label>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <label style="margin:0"><input type="checkbox" id="optHeader" checked style="width:auto;margin-right:7px">
+        Dołącz nagłówek z tytułem odcinka</label>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Podgląd</h2>
+    <div class="preview" id="preview"></div>
+  </div>
+  <div class="toolbar">
+    <button class="btn sec" id="btnCopy">Kopiuj do schowka</button>
+    <button class="btn sec" id="btnTxt">Pobierz .txt</button>
+    <button class="btn" id="btnDocx">Pobierz .docx</button>
+  </div>
+</section>
+
+<!-- ============================ TAB 4 ============================ -->
+<section id="t4" class="tab">
+  <div class="card">
+    <h2><span class="n">4</span>Streszczenie odcinka <span class="badge ai">AI</span></h2>
+    <p class="hint">Format prasowo-zapowiedziowy: nagłówek + akapit sprawy kryminalnej + akapit wątku prywatnego,
+      ok. 80–150 słów.</p>
+    <div class="grid3">
+      <div><label>Nr odcinka</label><input type="text" id="sEp" placeholder="59"></div>
+      <div><label>Nr globalny</label><input type="text" id="sEpG" placeholder="1274"></div>
+      <div><label>Para</label><input type="text" id="sPair" placeholder="Adam/Olga"></div>
+    </div>
+    <div class="row mt" style="display:block"><label>Tytuł</label>
+      <input type="text" id="sTitle" placeholder="Domy niespokojnej starości"></div>
+    <div class="row mt">
+      <button class="btn" id="btnSum">Wygeneruj przez API</button>
+      <button class="btn sec" id="btnSumPrompt">Kopiuj prompt</button>
+      <span id="sumStatus" class="sub"></span>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Treść streszczenia</h2>
+    <p class="hint">Możesz swobodnie edytować — eksport bierze to, co widzisz poniżej.</p>
+    <textarea id="sumText" rows="14"></textarea>
+    <div class="row mt">
+      <button class="btn sec" id="btnSumCopy">Kopiuj</button>
+      <button class="btn" id="btnSumDocx">Pobierz .docx</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ TAB 5 ============================ -->
+<section id="t5" class="tab">
+  <div class="card">
+    <h2>Połączenie z AI</h2>
+    <p class="hint">Klucz API trzymany jest wyłącznie w pamięci tej karty przeglądarki — nigdzie go nie zapisujemy
+      ani nie wysyłamy poza api.anthropic.com. Bez klucza aplikacja działa w pełni; użyj wtedy przycisków
+      „Kopiuj prompt” i wklej odpowiedź ręcznie.</p>
+    <div class="grid2">
+      <div><label>Klucz API (Anthropic)</label><input type="password" id="apiKey" placeholder="sk-ant-…"></div>
+      <div><label>Model</label>
+        <div class="row" style="flex-wrap:nowrap">
+          <input type="text" id="apiModel" value="claude-sonnet-4-5" style="flex:1">
+          <button class="btn sm sec" id="btnModels" style="white-space:nowrap">Pobierz listę</button>
+        </div>
+        <select id="modelSel" style="margin-top:7px;display:none"></select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Postacie stałe serialu</h2>
+    <p class="hint">Jedna postać w wierszu. Format: <span class="kbd">Nazwa kanoniczna | alias, alias, alias</span>.
+      Aliasy to warianty zapisu spotykane w drabinkach (imię, nazwisko, ze stopniem służbowym).</p>
+    <textarea id="cfgRegulars" rows="12" class="mono"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Słowa-klucze statystów</h2>
+    <p class="hint">Postać, której nazwa zawiera którekolwiek z tych słów, trafia domyślnie do statystów.
+      Oddziel przecinkami.</p>
+    <textarea id="cfgExtras" rows="4" class="mono"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Lokacje stałe (niepłatne)</h2>
+    <p class="hint">Lokacja, której nazwa zawiera któreś z tych słów, trafia do sekcji „Lokacje stałe”.</p>
+    <textarea id="cfgFixed" rows="3" class="mono"></textarea>
+    <div class="row mt">
+      <button class="btn" id="btnCfgSave">Zapisz ustawienia i przelicz</button>
+      <button class="btn sec" id="btnCfgReset">Przywróć domyślne</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Projekt</h2>
+    <p class="hint">Zapisz całą pracę (drabinka + wszystkie ręczne poprawki + ustawienia) do pliku,
+      żeby wrócić do niej później albo przekazać komuś innemu.</p>
+    <div class="row">
+      <button class="btn sec" id="btnSaveProj">Zapisz projekt (.json)</button>
+      <button class="btn sec" id="btnLoadProj">Wczytaj projekt</button>
+      <input type="file" id="projFile" accept=".json" style="display:none">
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>O narzędziu</h2>
+    <p class="hint" style="margin:0">
+      Jeden plik HTML, bez zewnętrznych bibliotek i bez backendu — możesz go wrzucić na dowolny hosting
+      statyczny (GitHub Pages, Netlify) albo po prostu wysłać mailem. Cała praca dzieje się w przeglądarce.
+    </p>
+  </div>
+</section>
+
+</main>
+
+<script>
+/* ============================================================================
+   ROZPISKA — silnik parsujący drabinkę serialu i budujący dokumentację
+   produkcyjną. Czysty JS, bez zależności. Działa w przeglądarce i w Node.
+   ========================================================================== */
+(function (root) {
+'use strict';
+
+/* ---------------------------------------------------------------- SŁOWNIKI */
+
+// Postacie stałe serialu (lista castingowa). Klucz = nazwa kanoniczna,
+// wartość = warianty zapisu spotykane w drabinkach.
+var DEFAULT_REGULARS = [
+  { name: 'Adam Bogusz',      aliases: ['Adam', 'Bogusz', 'det. Adam Bogusz', 'Adam B.'] },
+  { name: 'Olga Lipska',      aliases: ['Olga', 'Lipska', 'det. Olga Lipska'] },
+  { name: 'Natalia Rawicz',   aliases: ['Natalia', 'Rawicz'] },
+  { name: 'Kuba Sikora',      aliases: ['Kuba', 'Sikora'] },
+  { name: 'Olgierd Mazur',    aliases: ['Olgierd', 'Mazur'] },
+  { name: 'Krystian Wilk',    aliases: ['Krystian', 'Wilk'] },
+  { name: 'Krzysiek',         aliases: ['Krzysiek', 'Krzysztof'] },
+  { name: 'Michał Rafalski',  aliases: ['Michał', 'Rafalski'] },
+  { name: 'Stefan Dobosz',    aliases: ['Stefan', 'Dobosz'] },
+  { name: 'Janusz Woźniak',   aliases: ['Woźniak', 'Janusz', 'kom. Woźniak', 'komendant Woźniak', 'Komendant'] },
+  { name: 'Roksana Cieślak',  aliases: ['Roksana', 'Cieślak'] },
+  { name: 'Głowacki',         aliases: ['Głowacki'] },
+  { name: 'Miłosz',           aliases: ['Miłosz'] },
+  { name: 'Renata',           aliases: ['Renata'] },
+  { name: 'Szymon',           aliases: ['Szymon'] },
+  { name: 'Żaneta',           aliases: ['Żaneta'] },
+  { name: 'Magda',            aliases: ['Magda'] },
+  { name: 'Artur',            aliases: ['Artur'] },
+  { name: 'Ewelina',          aliases: ['Ewelina'] },
+  { name: 'Antek',            aliases: ['Antek'] }
+];
+
+// Postacie tła — jeśli nazwa postaci pasuje do jednego z tych wzorców,
+// trafia domyślnie do sekcji „Statyści”.
+var DEFAULT_EXTRA_WORDS = [
+  'mundurowy', 'mundurowi', 'policjant', 'policjanci', 'patrol', 'radiowóz',
+  'technik', 'technicy', 'kryminalistyk',
+  'pielęgniar', 'sanitariusz', 'ratownik', 'lekarz', 'pacjent', 'pielegniar',
+  'przechodzień', 'przechodnie', 'klient', 'klientka', 'bywalec', 'bywalcy',
+  'barman', 'kelner', 'kelnerka', 'sprzedawc', 'kasjer', 'recepcjonist',
+  'ochroniarz', 'ochrona', 'strażnik', 'konwojent', 'kierowca', 'taksówkarz',
+  'zatrzymany', 'aresztant', 'więzień', 'świadek', 'gapie', 'tłum', 'gość',
+  'goście', 'sekretarka', 'listonosz', 'kurier', 'dozorca', 'sąsiedzi',
+  'biegacz', 'spacerowicz', 'matka z dzieckiem', 'para', 'ekipa'
+];
+
+// Lokacje stałe (niepłatne).
+var DEFAULT_FIXED_LOCATIONS = [
+  'komenda', 'nieoznakowany radiowóz', 'oznakowany radiowóz', 'radiowóz',
+  'cbp', 'kpp', 'komisariat'
+];
+
+var DAY_WORDS = 'DZIEŃ|DZIEN|NOC|ŚWIT|SWIT|WIECZÓR|WIECZOR|PORANEK|RANEK|POŁUDNIE|POLUDNIE|NAD RANEM|ZMIERZCH';
+
+/* ------------------------------------------------------------- NARZĘDZIA */
+
+function stripDiacritics(s) {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '')
+          .replace(/ł/g, 'l').replace(/Ł/g, 'L');
+}
+
+function norm(s) {
+  return stripDiacritics(String(s || '')).toLowerCase()
+    .replace(/[.’']/g, '').replace(/\s+/g, ' ').trim();
+}
+
+// Naturalne sortowanie numerów scen: 1, 2, 17, 17A, 17B, 18
+function sceneKey(n) {
+  var m = String(n).match(/^(\d+)\s*([A-Za-z]*)$/);
+  if (!m) return [999999, String(n)];
+  return [parseInt(m[1], 10), (m[2] || '').toUpperCase()];
+}
+function cmpScene(a, b) {
+  var ka = sceneKey(a), kb = sceneKey(b);
+  if (ka[0] !== kb[0]) return ka[0] - kb[0];
+  return ka[1] < kb[1] ? -1 : ka[1] > kb[1] ? 1 : 0;
+}
+function sortScenes(arr) { return arr.slice().sort(cmpScene); }
+function uniq(arr) { var s = [], seen = {}; arr.forEach(function (x) { if (!seen[x]) { seen[x] = 1; s.push(x); } }); return s; }
+
+// Polska odmiana rzeczownika „scena”
+function plScen(n) {
+  if (n === 1) return '1 scena';
+  var last = n % 10, last2 = n % 100;
+  if (last >= 2 && last <= 4 && !(last2 >= 12 && last2 <= 14)) return n + ' sceny';
+  return n + ' scen';
+}
+
+/* --------------------------------------------------- KAPITALIZACJA NAZW */
+
+// Nagłówki są WERSALIKAMI. Żeby zamienić „MIESZKANIE EDWARDA” na
+// „Mieszkanie Edwarda”, zbieramy z treści drabinki słowa, które w normalnym
+// tekście pisane są wielką literą (nazwy własne) i tylko te zostawiamy duże.
+function buildProperNounSet(bodyText) {
+  var set = {};
+  var words = bodyText.match(/[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]{2,}/g) || [];
+  var lower = {};
+  var lw = bodyText.match(/(?:^|[^.!?]\s)([a-ząćęłńóśźż]{3,})/g) || [];
+  lw.forEach(function (w) { lower[norm(w)] = (lower[norm(w)] || 0) + 1; });
+  words.forEach(function (w) {
+    var k = norm(w);
+    // słowo uznajemy za nazwę własną, jeśli praktycznie nie występuje małą literą
+    if (!lower[k] || lower[k] < 2) set[k] = (set[k] || 0) + 1;
+  });
+  return set;
+}
+
+function smartCase(upperText, properSet) {
+  if (!upperText) return '';
+  var parts = upperText.split(/(\s+|\/|-|–)/);
+  var first = true;
+  return parts.map(function (p) {
+    if (/^(\s+|\/|-|–)$/.test(p) || !p) return p;
+    var k = norm(p);
+    var isProper = properSet && properSet[k];
+    var out;
+    if (p.length <= 3 && /^(WN|PL|CBP|BSW|KPP|PPS|SUV|TIR)$/i.test(p)) out = p.toUpperCase();
+    else if (isProper || first) out = p.charAt(0).toUpperCase() + p.slice(1).toLowerCase();
+    else out = p.toLowerCase();
+    first = false;
+    return out;
+  }).join('');
+}
+
+/* ------------------------------------------------------------- PARSER */
+
+// Wariant podstawowy: „12. WN. KOMENDA - RECEPCJA. DZIEŃ 2 (14.30)”
+// (dopuszczalne też „SC. 12”, „12A.”, „12)”)
+var HEADER_RE = new RegExp(
+  '^\\s*(?:SC\\.?\\s*)?(\\d{1,3}\\s*[A-Za-z]?)\\s*[.)]\\s*(WN\\/PL|PL\\/WN|WN|PL|PLENER|WNĘTRZE)\\b\\.?\\s*(.*)$', 'i');
+// Wariant zapasowy: nagłówek bez numeru — „WN. KOMENDA - RECEPCJA. DZIEŃ 2 (14.30)”.
+// Używany tylko wtedy, gdy wariant podstawowy nie znalazł ani jednej sceny;
+// sceny numerowane są wtedy kolejno od 1.
+var HEADER_RE_NONUM = new RegExp(
+  '^\\s*(WN\\/PL|PL\\/WN|WN|PL|PLENER|WNĘTRZE)\\b\\.?\\s*(.*)$', 'i');
+
+function parseDrabinka(rawText, opts) {
+  opts = opts || {};
+  var first = parseWith(rawText, HEADER_RE, false);
+  if (first.scenes.length) return first;
+  var second = parseWith(rawText, HEADER_RE_NONUM, true);
+  if (second.scenes.length) {
+    second.warnings.unshift('Nagłówki nie zawierały numerów scen — ponumerowano je kolejno od 1. Sprawdź numerację.');
+    return second;
+  }
+  return first;
+}
+
+function parseWith(rawText, HEADER_RE, autoNumber) {
+  // normalizacja: konce linii, twarde spacje i lacznik nierozdzielajacy z Worda/Docsow
+  var text = String(rawText || '')
+    .replace(/\r\n?/g, '\n')
+    .replace(/[\u00A0\u202F\u2007\u2009]/g, ' ')
+    .replace(/\u2011/g, '-');
+  var lines = text.split('\n');
+  var scenes = [];
+  var warnings = [];
+  var bodyChunks = [];
+  var i = 0;
+
+  while (i < lines.length) {
+    var line = lines[i];
+    var m = line.match(HEADER_RE);
+    if (!m) { bodyChunks.push(line); i++; continue; }
+
+    // nagłówek może być zawinięty na kolejną linię — sklejamy aż nawiasy się domkną
+    var head = line.trim();
+    var guard = 0;
+    while (((head.split('(').length - 1) > (head.split(')').length - 1)) && i + 1 < lines.length && guard < 4) {
+      i++; guard++;
+      head += ' ' + lines[i].trim();
+    }
+    m = head.match(HEADER_RE);
+    if (!m) { bodyChunks.push(line); i++; continue; }
+
+    // w wariancie bez numeru grupy są przesunięte o jedną w lewo
+    var gNum = autoNumber ? null : m[1];
+    var gType = autoNumber ? m[1] : m[2];
+    var gRest = autoNumber ? m[2] : m[3];
+
+    var scene = {
+      number: autoNumber ? String(scenes.length + 1) : gNum.replace(/\s+/g, '').toUpperCase(),
+      intExt: /^WN$|^WNĘTRZE$/i.test(gType) ? 'WN' : (/^PL$|^PLENER$/i.test(gType) ? 'PL' : gType.toUpperCase()),
+      raw: head,
+      location: '', subLocation: '', dayPart: '', dayNumber: '', time: '',
+      characters: [], body: ''
+    };
+
+    var rest = gRest || '';
+    var dre = new RegExp('(?:^|[\\s.,;:\\-\\u2013\\u2014/])(' + DAY_WORDS + ')', 'i');
+    var dm = rest.match(dre);
+    var locPart, tailPart;
+    if (dm) {
+      var idx = rest.indexOf(dm[1], dm.index);
+      locPart = rest.slice(0, idx);
+      tailPart = rest.slice(idx);
+    } else {
+      var pidx = rest.indexOf('(');
+      locPart = pidx > -1 ? rest.slice(0, pidx) : rest;
+      tailPart = pidx > -1 ? rest.slice(pidx) : '';
+      warnings.push('Scena ' + scene.number + ': nie rozpoznano pory dnia w nagłówku.');
+    }
+
+    locPart = locPart.replace(/^[\s.,;:\-–—]+/, '').replace(/[\s.,;:\-–—]+$/, '');
+    var lm = locPart.match(/^(.*?)\s*[-–—]\s*(.+)$/);
+    if (lm) { scene.location = lm[1].trim(); scene.subLocation = lm[2].trim(); }
+    else { scene.location = locPart.trim(); scene.subLocation = ''; }
+
+    var pm = tailPart.match(new RegExp('^(' + DAY_WORDS + ')\\s*(\\d+)?', 'i'));
+    if (pm) { scene.dayPart = pm[1].toUpperCase(); scene.dayNumber = pm[2] || ''; }
+    var tm = tailPart.match(/\(([^)]*)\)/);
+    if (tm) scene.time = tm[1].trim();
+
+    // linia z obsadą sceny — pierwszy nawias w kolejnych liniach
+    var j = i + 1;
+    var castRaw = null;
+    var lookahead = 0;
+    while (j < lines.length && lookahead < 3) {
+      var l = lines[j].trim();
+      if (!l) { j++; lookahead++; continue; }
+      if (l.charAt(0) === '(') {
+        var buf = l, g2 = 0;
+        while (((buf.split('(').length - 1) > (buf.split(')').length - 1)) && j + 1 < lines.length && g2 < 4) {
+          j++; g2++; buf += ' ' + lines[j].trim();
+        }
+        castRaw = buf.replace(/^\(/, '').replace(/\)\s*$/, '');
+        j++;
+      }
+      break;
+    }
+    if (castRaw == null) warnings.push('Scena ' + scene.number + ': brak listy postaci pod nagłówkiem.');
+    scene.characters = parseCastLine(castRaw || '');
+
+    // treść sceny — do następnego nagłówka
+    var bodyLines = [];
+    var k = j;
+    while (k < lines.length && !HEADER_RE.test(lines[k])) { bodyLines.push(lines[k]); k++; }
+    scene.body = bodyLines.join('\n').trim();
+    bodyChunks.push(scene.body);
+
+    scenes.push(scene);
+    i = k;
+  }
+
+  // duplikaty numerów
+  var seen = {};
+  scenes.forEach(function (s) {
+    if (seen[s.number]) warnings.push('Numer sceny ' + s.number + ' występuje więcej niż raz.');
+    seen[s.number] = 1;
+  });
+
+  return { scenes: scenes, warnings: warnings, bodyText: bodyChunks.join('\n') };
+}
+
+function parseCastLine(s) {
+  if (!s.trim()) return [];
+  return s.split(/[,;]+/).map(function (tok) {
+    var t = tok.trim();
+    if (!t) return null;
+    var off = false;
+    // warianty offu: „Żaneta-off”, „Olga (off)”, „Żaneta – off”, „Żaneta/off”
+    var offRe = /\s*[\(\[]?\s*[-–—\/]?\s*\boff\b\s*[\)\]]?\s*$/i;
+    if (offRe.test(t)) { off = true; t = t.replace(offRe, '').replace(/[-–—\/\s]+$/, ''); }
+    t = t.replace(/^[-–—\s]+/, '').trim();
+    if (!t) return null;
+    return { name: t, off: off };
+  }).filter(Boolean);
+}
+
+/* ---------------------------------------------------------- MODEL DANYCH */
+
+function classify(name, cfg) {
+  var n = norm(name);
+  // ilość typu „Mundurowi x 2 z radiowozem” — do dopasowania bierzemy sam rdzeń
+  var core = n.replace(/\s*[x×]\s*\d+.*$/, '').trim();
+
+  for (var i = 0; i < cfg.regulars.length; i++) {
+    var r = cfg.regulars[i];
+    var cands = [r.name].concat(r.aliases || []);
+    for (var j = 0; j < cands.length; j++) {
+      var c = norm(cands[j]);
+      if (core === c) return { kind: 'regular', canonical: r.name };
+      // „sierż. Ćwikliński” vs „Ćwikliński”; „det. Adam Bogusz” vs „Adam Bogusz”
+      var stripped = core.replace(/^(det|sierz|asp|kom|mlasp|st sierz|podkom|nadkom|insp|prok|dr|mjr|kpt|por)\s+/, '');
+      if (stripped === c) return { kind: 'regular', canonical: r.name };
+    }
+  }
+  for (var k = 0; k < cfg.extraWords.length; k++) {
+    if (core.indexOf(norm(cfg.extraWords[k])) > -1) return { kind: 'extra', canonical: name };
+  }
+  return { kind: 'episodic', canonical: name };
+}
+
+function isFixedLocation(locName, cfg) {
+  var n = norm(locName);
+  for (var i = 0; i < cfg.fixedLocations.length; i++) {
+    if (n.indexOf(norm(cfg.fixedLocations[i])) > -1) return true;
+  }
+  return false;
+}
+
+var PL_LETTER = '[A-Za-zĄĆĘŁŃÓŚŹŻąćęłńóśźż]';
+
+// Rdzeń słowa odporny na polską odmianę: „Więcek” → „Więc”, „Ćwikliński” → „Ćwikli”
+function stemWord(w) {
+  var clean = w.replace(/[^A-Za-zĄĆĘŁŃÓŚŹŻąćęłńóśźż]/g, '');
+  if (clean.length <= 4) return clean;
+  var keep = Math.max(4, Math.ceil(clean.length * 0.6));
+  return clean.slice(0, keep);
+}
+function escRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+/* Szuka wieku postaci: „Benek Więcek(25)”, „Sąsiadką Edwarda (70)”, „Ela Nowacka (40)”.
+   Szuka najpierw w scenie pierwszego wystąpienia postaci (tam scenarzysta
+   przedstawia bohatera), potem w kolejnych jej scenach, na końcu w całym tekście. */
+function findAge(name, contexts) {
+  var clean = name.replace(/\s*[x×]\s*\d+.*$/, '').trim()
+                  .replace(/^(sierż|st\.? sierż|asp|podkom|nadkom|kom|insp|prok|dr|mjr|kpt|por|det)\.?\s+/i, '');
+  var parts = clean.split(/\s+/).filter(function (p) { return p.length > 1; });
+  if (!parts.length) return '';
+
+  var pats = [];
+  if (parts.length > 1) {
+    pats.push(new RegExp(parts.map(function (p) { return stemWord(p) + PL_LETTER + '*'; }).join('\\s+') +
+      '\\s*\\(\\s*(\\d{1,3})\\s*\\)'));
+  }
+  pats.push(new RegExp(stemWord(parts[parts.length - 1]) + PL_LETTER + '*\\s*\\(\\s*(\\d{1,3})\\s*\\)'));
+
+  for (var c = 0; c < contexts.length; c++) {
+    for (var p = 0; p < pats.length; p++) {
+      var m = contexts[c].match(pats[p]);
+      if (m) return m[1];
+    }
+  }
+  return '';
+}
+
+// Liczba osób w pozycji statysty: „Mundurowi x 2 z radiowozem” → 2
+function headcount(name) {
+  var m = name.match(/[x×]\s*(\d+)/i);
+  return m ? parseInt(m[1], 10) : 1;
+}
+
+function buildModel(parsed, cfg) {
+  cfg = mergeConfig(cfg);
+  var scenes = parsed.scenes;
+  var properSet = buildProperNounSet(parsed.bodyText);
+
+  var people = {};   // key -> {display, kind, scenes:[{n,off}], age, desc}
+  scenes.forEach(function (sc) {
+    sc.characters.forEach(function (ch) {
+      var cl = classify(ch.name, cfg);
+      var key = cl.kind === 'regular' ? cl.canonical : norm(ch.name);
+      if (!people[key]) {
+        people[key] = {
+          key: key,
+          display: cl.kind === 'regular' ? cl.canonical : tidyName(ch.name, properSet),
+          kind: cl.kind,
+          scenes: [],
+          age: '',
+          desc: ''
+        };
+      }
+      people[key].scenes.push({ n: sc.number, off: ch.off });
+    });
+  });
+
+  var bodyByScene = {};
+  scenes.forEach(function (sc) { bodyByScene[sc.number] = sc.body; });
+
+  var list = Object.keys(people).map(function (k) { return people[k]; });
+  list.forEach(function (p) {
+    p.scenes.sort(function (a, b) { return cmpScene(a.n, b.n); });
+    p.headcount = headcount(p.display);
+    if (p.kind !== 'regular') {
+      var ctx = p.scenes.map(function (s) { return bodyByScene[s.n] || ''; });
+      ctx.push(parsed.bodyText);
+      p.age = findAge(p.display, ctx);
+    }
+  });
+
+  function sortByFirstScene(a, b) {
+    if (!a.scenes.length || !b.scenes.length) return 0;
+    return cmpScene(a.scenes[0].n, b.scenes[0].n);
+  }
+  function byCountDesc(a, b) {
+    if (b.scenes.length !== a.scenes.length) return b.scenes.length - a.scenes.length;
+    return sortByFirstScene(a, b);
+  }
+
+  var regulars = list.filter(function (p) { return p.kind === 'regular'; }).sort(byCountDesc);
+  var episodics = list.filter(function (p) { return p.kind === 'episodic'; }).sort(sortByFirstScene);
+  var extras = list.filter(function (p) { return p.kind === 'extra'; }).sort(sortByFirstScene);
+
+  /* ------- lokacje ------- */
+  var locs = {};
+  scenes.forEach(function (sc) {
+    var lk = norm(sc.location);
+    if (!lk) return;
+    if (!locs[lk]) locs[lk] = { key: lk, name: tidyName(sc.location, properSet), scenes: [], subs: {}, fixed: isFixedLocation(sc.location, cfg), note: '' };
+    locs[lk].scenes.push({ n: sc.number, dayPart: sc.dayPart });
+    var sk = norm(sc.subLocation) || '__main__';
+    if (!locs[lk].subs[sk]) locs[lk].subs[sk] = { name: sc.subLocation ? tidyName(sc.subLocation, properSet) : '', scenes: [] };
+    locs[lk].subs[sk].scenes.push(sc.number);
+  });
+
+  var locList = Object.keys(locs).map(function (k) {
+    var L = locs[k];
+    L.scenes.sort(function (a, b) { return cmpScene(a.n, b.n); });
+    L.subList = Object.keys(L.subs).map(function (sk) {
+      var S = L.subs[sk];
+      S.scenes = sortScenes(uniq(S.scenes));
+      return S;
+    }).sort(function (a, b) { return cmpScene(a.scenes[0], b.scenes[0]); });
+    // dzień/noc
+    var day = 0, night = 0;
+    L.scenes.forEach(function (s) {
+      if (/^NOC|ZMIERZCH/.test(s.dayPart)) night++; else day++;
+    });
+    L.dayCount = day; L.nightCount = night;
+    return L;
+  }).sort(function (a, b) { return cmpScene(a.scenes[0].n, b.scenes[0].n); });
+
+  // lokacje stałe: od najbardziej obciążonej (Komenda przed radiowozem);
+  // lokacje płatne: w kolejności pojawiania się w odcinku
+  var fixedLocs = locList.filter(function (l) { return l.fixed; })
+    .sort(function (a, b) {
+      if (b.scenes.length !== a.scenes.length) return b.scenes.length - a.scenes.length;
+      return cmpScene(a.scenes[0].n, b.scenes[0].n);
+    });
+  var paidLocs = locList.filter(function (l) { return !l.fixed; });
+
+  /* ------- PPS ------- */
+  var ppsMap = {};
+  scenes.forEach(function (sc) {
+    var hits = (sc.body + ' ' + sc.raw).match(/PPS\s*\.?\s*(\d+)/gi) || [];
+    hits.forEach(function (h) {
+      var num = h.replace(/\D/g, '');
+      if (!ppsMap[num]) ppsMap[num] = { id: 'PPS' + num, scenes: [], title: '', day: '', desc: '' };
+      ppsMap[num].scenes.push(sc.number);
+    });
+  });
+  var ppsList = Object.keys(ppsMap).sort(function (a, b) { return a - b; }).map(function (k) {
+    ppsMap[k].scenes = sortScenes(uniq(ppsMap[k].scenes));
+    return ppsMap[k];
+  });
+
+  /* ------- pojazdy (zalążek: lokacje typu radiowóz + wzmianki w treści) ------- */
+  var vehicles = [];
+  locList.forEach(function (L) {
+    if (/radiowoz/.test(norm(L.name))) {
+      var from = L.scenes.map(function (s) { return s.n; });
+      // dołóż sceny, w których radiowóz pojawia się w treści, choć nie jest lokacją
+      scenes.forEach(function (sc) {
+        if (/radiowoz|radiowóz|radiowozu|radiowozem|nieoznakowanym/i.test(sc.body) &&
+            from.indexOf(sc.number) === -1) from.push(sc.number);
+      });
+      vehicles.push({
+        name: L.name + (/nieoznakowany/.test(norm(L.name)) ? ' CBP' : ''),
+        desc: '',
+        scenes: sortScenes(uniq(from))
+      });
+    }
+  });
+
+  return {
+    meta: { title: '', episode: '', episodeGlobal: '', pair: '' },
+    scenes: scenes,
+    regulars: regulars,
+    episodics: episodics,
+    extras: extras,
+    fixedLocations: fixedLocs,
+    paidLocations: paidLocs,
+    pps: ppsList,
+    vehicles: vehicles,
+    warnings: parsed.warnings
+  };
+}
+
+function tidyName(name, properSet) {
+  // jeśli nazwa jest wersalikami — złagodź; jeśli już mieszana, zostaw
+  if (name === name.toUpperCase() && /[A-ZĄĆĘŁŃÓŚŹŻ]{2,}/.test(name)) return smartCase(name, properSet);
+  return name.replace(/\s+/g, ' ').trim();
+}
+
+/* ------------------------------------------------------------ RENDEROWANIE */
+
+function fmtSceneList(items) {
+  return items.map(function (s) {
+    if (typeof s === 'string') return s;
+    return s.n + (s.off ? ' (off)' : '');
+  }).join(', ');
+}
+
+function renderDoc(model, options) {
+  var o = Object.assign({
+    showCounts: true,        // „Adam Bogusz – 21 (2, 3, ...)”
+    headerTitle: true,
+    bulletL1: '● ',
+    bulletL2: '○ '
+  }, options || {});
+
+  var B = [];   // bloki: {style, text}
+  function p(style, text) { B.push({ style: style, text: text }); }
+
+  if (o.headerTitle && (model.meta.title || model.meta.episode)) {
+    var h = '';
+    if (model.meta.episode) {
+      h += 'Odc. ' + model.meta.episode +
+           (model.meta.episodeGlobal ? ' (' + model.meta.episodeGlobal + ')' : '');
+    }
+    if (model.meta.title) h += (h ? ' – ' : '') + model.meta.title.toUpperCase();
+    if (model.meta.pair) h += (h ? ' ' : '') + '(para ' + model.meta.pair + ')';
+    p('title', h);
+    p('spacer', '');
+  }
+
+  p('h', 'Lista castingowa:');
+  model.regulars.forEach(function (r) {
+    var scenesTxt = fmtSceneList(r.scenes);
+    p('li1', r.display + ' – ' + (o.showCounts ? r.scenes.length + ' ' : '') + '(' + scenesTxt + ')');
+  });
+
+  p('spacer', '');
+  p('h', 'Pozostali odtwórcy:');
+  model.episodics.forEach(function (e) {
+    var head = e.display + (e.age ? ' (' + e.age + ')' : '');
+    var desc = e.desc ? ' – ' + e.desc.trim().replace(/\.$/, '') + '.' : '';
+    p('li1', head + desc + ' (' + fmtSceneList(e.scenes) + ')');
+  });
+
+  p('spacer', '');
+  p('h', 'Statyści:');
+  model.extras.forEach(function (e) {
+    var head = e.display + (e.age ? ' (' + e.age + ')' : '');
+    var desc = e.desc ? ' – ' + e.desc.trim().replace(/\.$/, '') : '';
+    p('li1', head + desc + ' (' + fmtSceneList(e.scenes) + ')');
+  });
+
+  p('spacer', '');
+  p('h', 'Lista lokacji:');
+  if (model.fixedLocations.length) {
+    p('h2', 'Lokacje stałe:');
+    model.fixedLocations.forEach(function (L) { renderLoc(L); });
+  }
+  if (model.paidLocations.length) {
+    p('h2', 'Lokacje:');
+    model.paidLocations.forEach(function (L) { renderLoc(L); });
+  }
+
+  function renderLoc(L) {
+    var dn = [];
+    if (L.dayCount) dn.push(plScen(L.dayCount) + ' dzień');
+    if (L.nightCount) dn.push(plScen(L.nightCount) + ' noc');
+    var all = L.scenes.map(function (s) { return s.n; });
+    var onlyMain = L.subList.length === 1 && !L.subList[0].name;
+    p('li1', L.name + ' – ' + dn.join(', ') + ' (' + all.join(', ') + ')');
+    if (L.note) p('note', L.note);
+    if (!onlyMain) {
+      L.subList.forEach(function (S) {
+        if (!S.name) return;
+        p('li2', S.name + ' (' + S.scenes.join(', ') + ')');
+      });
+    }
+  }
+
+  if (model.pps.length) {
+    p('spacer', '');
+    p('h', 'Lista PPS:');
+    model.pps.forEach(function (x) {
+      var scLbl = x.scenes.length > 1 ? 'Sceny (' + x.scenes.join(',') + ')' : 'Scena ' + x.scenes[0];
+      p('li1', x.id + ' - ' + (x.title || '') + ', ' + scLbl + (x.day ? ', ' + x.day : ''));
+      if (x.desc) p('note', x.desc);
+    });
+  }
+
+  if (model.vehicles.length) {
+    p('spacer', '');
+    p('h', 'Lista pojazdów:');
+    model.vehicles.forEach(function (v) {
+      var scLbl = v.scenes.length > 1 ? '(sceny ' + v.scenes.join(', ') + ')' : '(scena ' + v.scenes[0] + ')';
+      p('li1', v.name + (v.desc ? ' – ' + v.desc.replace(/\.$/, '') : '') + ' ' + scLbl);
+    });
+  }
+
+  p('spacer', '');
+  p('h', 'Podsumowanie produkcyjne:');
+  p('li1', 'Liczba lokacji płatnych: ' + model.paidLocations.length);
+  var heads = 0;
+  model.episodics.concat(model.extras).forEach(function (e) { heads += (e.headcount || 1); });
+  p('li1', 'Liczba dodatkowych odtwórców: ' + (model.episodics.length + model.extras.length) +
+        ' (epizody: ' + model.episodics.length + ', statyści: ' + model.extras.length +
+        '; łącznie osób: ' + heads + ')');
+
+  return B;
+}
+
+function blocksToText(blocks, o) {
+  o = o || {};
+  var b1 = o.bulletL1 || '● ', b2 = o.bulletL2 || '○ ';
+  return blocks.map(function (b) {
+    switch (b.style) {
+      case 'title': return b.text;
+      case 'h': return b.text;
+      case 'h2': return b.text;
+      case 'li1': return b1 + b.text;
+      case 'li2': return '    ' + b2 + b.text;
+      case 'note': return '    ' + b.text;
+      case 'spacer': return '';
+      default: return b.text;
+    }
+  }).join('\n');
+}
+
+/* ---------------------------------------------------------------- CONFIG */
+
+function mergeConfig(cfg) {
+  cfg = cfg || {};
+  return {
+    regulars: cfg.regulars || DEFAULT_REGULARS,
+    extraWords: cfg.extraWords || DEFAULT_EXTRA_WORDS,
+    fixedLocations: cfg.fixedLocations || DEFAULT_FIXED_LOCATIONS
+  };
+}
+
+/* ------------------------------------------------------------- EKSPORT */
+
+/* Po ręcznej edycji nazw sublokacji scala pozycje o identycznej nazwie
+   (np. „W ruchu” przemianowane na „Droga / w ruchu” łączy się ze sceną 5). */
+function remergeSubs(loc) {
+  var out = [], byKey = {};
+  loc.subList.forEach(function (S) {
+    var k = norm(S.name);
+    if (byKey[k]) { byKey[k].scenes = sortScenes(uniq(byKey[k].scenes.concat(S.scenes))); }
+    else { byKey[k] = { name: S.name, scenes: sortScenes(uniq(S.scenes)) }; out.push(byKey[k]); }
+  });
+  out.sort(function (a, b) { return cmpScene(a.scenes[0], b.scenes[0]); });
+  loc.subList = out;
+  return loc;
+}
+
+var API = {
+  remergeSubs: remergeSubs,
+  headcount: headcount,
+  DEFAULT_REGULARS: DEFAULT_REGULARS,
+  DEFAULT_EXTRA_WORDS: DEFAULT_EXTRA_WORDS,
+  DEFAULT_FIXED_LOCATIONS: DEFAULT_FIXED_LOCATIONS,
+  parseDrabinka: parseDrabinka,
+  buildModel: buildModel,
+  renderDoc: renderDoc,
+  blocksToText: blocksToText,
+  mergeConfig: mergeConfig,
+  plScen: plScen,
+  sortScenes: sortScenes,
+  cmpScene: cmpScene,
+  norm: norm
+};
+
+if (typeof module !== 'undefined' && module.exports) module.exports = API;
+root.RPE = API;
+
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+
+<script>
+/* ==========================================================================
+   APLIKACJA
+   ========================================================================== */
+(function(){
+'use strict';
+var $  = function(s){ return document.querySelector(s); };
+var $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
+
+var state = {
+  src: '',
+  parsed: null,
+  model: null,
+  cfg: null,
+  api: { key:'', model:'claude-sonnet-4-5' }
+};
+
+/* ------------------------------------------------------------- zakładki */
+$$('nav button').forEach(function(b){
+  b.addEventListener('click', function(){
+    $$('nav button').forEach(function(x){ x.classList.remove('on'); });
+    $$('.tab').forEach(function(x){ x.classList.remove('on'); });
+    b.classList.add('on');
+    $('#'+b.dataset.tab).classList.add('on');
+    if (b.dataset.tab === 't3') renderPreview();
+    window.scrollTo(0,0);
+  });
+});
+function goTab(id){
+  var b = $$('nav button').filter(function(x){ return x.dataset.tab===id; })[0];
+  if (b) b.click();
+}
+
+/* --------------------------------------------------------- konfiguracja */
+function cfgToText(cfg){
+  return cfg.regulars.map(function(r){
+    return r.name + (r.aliases && r.aliases.length ? ' | ' + r.aliases.join(', ') : '');
+  }).join('\n');
+}
+function textToRegulars(t){
+  return t.split('\n').map(function(l){
+    l = l.trim(); if(!l) return null;
+    var p = l.split('|');
+    return { name: p[0].trim(),
+             aliases: (p[1]||'').split(',').map(function(x){return x.trim();}).filter(Boolean) };
+  }).filter(Boolean);
+}
+function loadCfgUI(cfg){
+  $('#cfgRegulars').value = cfgToText(cfg);
+  $('#cfgExtras').value   = cfg.extraWords.join(', ');
+  $('#cfgFixed').value    = cfg.fixedLocations.join(', ');
+}
+function readCfgUI(){
+  return {
+    regulars: textToRegulars($('#cfgRegulars').value),
+    extraWords: $('#cfgExtras').value.split(',').map(function(x){return x.trim();}).filter(Boolean),
+    fixedLocations: $('#cfgFixed').value.split(',').map(function(x){return x.trim();}).filter(Boolean)
+  };
+}
+state.cfg = RPE.mergeConfig({});
+loadCfgUI(state.cfg);
+
+$('#btnCfgSave').addEventListener('click', function(){
+  state.cfg = readCfgUI();
+  if (state.parsed) { rebuild(true); toast('#t5','ok','Ustawienia zapisane, rozpiska przeliczona.'); }
+  else toast('#t5','ok','Ustawienia zapisane.');
+});
+$('#btnCfgReset').addEventListener('click', function(){
+  state.cfg = RPE.mergeConfig({}); loadCfgUI(state.cfg);
+  if (state.parsed) rebuild(true);
+});
+$('#apiKey').addEventListener('input', function(){ state.api.key = this.value.trim(); });
+$('#apiModel').addEventListener('input', function(){ state.api.model = this.value.trim(); });
+
+/* ---------------------------------------------------------------- toast */
+function toast(where,kind,text){
+  var host = $(where);
+  var d = document.createElement('div');
+  d.className = 'msg '+kind; d.textContent = text;
+  host.insertBefore(d, host.firstChild);
+  setTimeout(function(){ d.remove(); }, 5000);
+}
+
+/* --------------------------------------------------------- wejście / plik */
+$('#drop').addEventListener('click', function(){ $('#file').click(); });
+['dragenter','dragover'].forEach(function(e){
+  $('#drop').addEventListener(e, function(ev){ ev.preventDefault(); this.classList.add('hot'); });
+});
+['dragleave','drop'].forEach(function(e){
+  $('#drop').addEventListener(e, function(ev){ ev.preventDefault(); this.classList.remove('hot'); });
+});
+$('#drop').addEventListener('drop', function(ev){
+  var f = ev.dataTransfer.files[0]; if (f) readFile(f);
+});
+$('#file').addEventListener('change', function(){ if (this.files[0]) readFile(this.files[0]); });
+
+function readFile(f){
+  if (/\.docx$/i.test(f.name)) return readDocx(f);
+  if (/\.doc$/i.test(f.name)) {
+    return toast('#t1','err','Stary format .doc nie jest obsługiwany. Otwórz plik w Wordzie i zapisz jako .docx (Plik → Zapisz jako → Dokument programu Word).');
+  }
+  var r = new FileReader();
+  r.onload = function(){
+    var t = String(r.result);
+    if (/\.fdx$/i.test(f.name)) t = fdxToText(t);
+    if (/\.rtf$/i.test(f.name)) t = rtfToText(t);
+    $('#src').value = t; doParse();
+  };
+  r.readAsText(f, 'utf-8');
+}
+
+async function readDocx(f){
+  var dz = $('#drop'), old = dz.innerHTML;
+  dz.innerHTML = '<span class="spin"></span>Czytam dokument Word…';
+  try{
+    var buf = await f.arrayBuffer();
+    var txt = await docxToText(buf);
+    $('#src').value = txt;
+    dz.innerHTML = old;
+    doParse();
+    if (state.parsed && state.parsed.warnings.some(function(w){ return /ponumerowano je kolejno/.test(w); })){
+      toast('#t1','warn','W tekście nie ma numerów scen — najpewniej pochodzą z automatycznej numeracji Worda, ' +
+        'która nie jest częścią treści. Sceny ponumerowano kolejno od 1: sprawdź, czy to się zgadza. ' +
+        'Jeśli nie — w Wordzie zaznacz całość, skopiuj i wklej tutaj jako zwykły tekst.');
+    }
+  } catch(e){
+    dz.innerHTML = old;
+    toast('#t1','err','Nie udało się odczytać pliku Word: ' + e.message);
+  }
+}
+
+/* -------- odczyt .docx: własny czytnik ZIP + inflate z DecompressionStream ---- */
+function unzipEntries(buf){
+  var u8 = new Uint8Array(buf), dv = new DataView(buf);
+  var eocd = -1, min = Math.max(0, u8.length - 22 - 65535);
+  for (var i = u8.length - 22; i >= min; i--){
+    if (dv.getUint32(i, true) === 0x06054b50){ eocd = i; break; }
+  }
+  if (eocd < 0) throw new Error('to nie wygląda na plik .docx (brak struktury ZIP)');
+  var count = dv.getUint16(eocd + 10, true);
+  var p = dv.getUint32(eocd + 16, true);
+  var dec = new TextDecoder('utf-8');
+  var out = {};
+  for (var k = 0; k < count; k++){
+    if (p + 46 > u8.length || dv.getUint32(p, true) !== 0x02014b50) break;
+    var method = dv.getUint16(p + 10, true);
+    var csize  = dv.getUint32(p + 20, true);
+    var fnLen  = dv.getUint16(p + 28, true);
+    var exLen  = dv.getUint16(p + 30, true);
+    var cmLen  = dv.getUint16(p + 32, true);
+    var lho    = dv.getUint32(p + 42, true);
+    var name   = dec.decode(u8.subarray(p + 46, p + 46 + fnLen));
+    var lfn = dv.getUint16(lho + 26, true), lex = dv.getUint16(lho + 28, true);
+    var start = lho + 30 + lfn + lex;
+    out[name] = { method: method, raw: u8.subarray(start, start + csize) };
+    p += 46 + fnLen + exLen + cmLen;
+  }
+  return out;
+}
+async function inflateEntry(e){
+  if (!e) throw new Error('brak części word/document.xml w dokumencie');
+  if (e.method === 0) return e.raw;
+  if (e.method !== 8) throw new Error('nieobsługiwana metoda kompresji w archiwum');
+  if (typeof DecompressionStream === 'undefined')
+    throw new Error('ta przeglądarka nie potrafi rozpakować .docx — użyj Chrome, Edge, Firefoksa lub Safari w aktualnej wersji');
+  var stream = new Blob([e.raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+async function docxToText(buf){
+  var files = unzipEntries(buf);
+  var xml = new TextDecoder('utf-8').decode(await inflateEntry(files['word/document.xml']));
+  return wordXmlToText(xml);
+}
+/* Zamiana word/document.xml na czysty tekst: jeden akapit = jedna linia.
+   Uwzględnia tabele, miękkie entery i pomija tekst usunięty w śledzeniu zmian. */
+function wordXmlToText(xml){
+  var doc = new DOMParser().parseFromString(xml, 'application/xml');
+  if (doc.getElementsByTagName('parsererror').length) throw new Error('uszkodzona zawartość dokumentu');
+  var paras = doc.getElementsByTagNameNS('*','p');
+  var lines = [];
+  for (var i = 0; i < paras.length; i++) lines.push(paraText(paras[i]));
+  // w tabelach każda komórka bywa osobnym akapitem — puste linie tylko zaśmiecają
+  return lines.join('\n').replace(/\n{3,}/g, '\n\n');
+}
+function paraText(p){
+  var s = '';
+  (function walk(n){
+    var cs = n.childNodes;
+    for (var i = 0; i < cs.length; i++){
+      var c = cs[i];
+      if (c.nodeType !== 1) continue;
+      var ln = c.localName;
+      if (ln === 't') s += c.textContent;
+      else if (ln === 'tab') s += ' ';
+      else if (ln === 'br' || ln === 'cr') s += ' ';
+      else if (ln === 'delText' || ln === 'instrText') continue;   // usunięte / kody pól
+      else walk(c);
+    }
+  })(p);
+  return s.replace(/[ \t]+/g, ' ').trim();
+}
+
+/* Prosty ekstraktor tekstu z RTF — Word zapisuje tak przy „zapisz jako RTF”. */
+function rtfToText(rtf){
+  return rtf
+    .replace(/\\'([0-9a-f]{2})/gi, function(_,h){ return String.fromCharCode(parseInt(h,16)); })
+    .replace(/\\u(-?\d+)\s?\??/g, function(_,d){ var n=+d; return String.fromCharCode(n<0?n+65536:n); })
+    .replace(/\{\\\*[^{}]*\}/g, '')
+    .replace(/\\par[d]?\b/g, '\n')
+    .replace(/\\line\b/g, '\n')
+    .replace(/\\[a-z]+-?\d*\s?/gi, '')
+    .replace(/[{}]/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+function fdxToText(xml){
+  try{
+    var doc = new DOMParser().parseFromString(xml,'text/xml');
+    var out = [];
+    Array.prototype.forEach.call(doc.getElementsByTagName('Paragraph'), function(p){
+      var txt = Array.prototype.map.call(p.getElementsByTagName('Text'), function(t){ return t.textContent; }).join('');
+      out.push(txt);
+    });
+    return out.join('\n');
+  } catch(e){ return xml; }
+}
+
+$('#btnClear').addEventListener('click', function(){ $('#src').value=''; $('#parseOut').innerHTML=''; });
+$('#btnSample').addEventListener('click', function(){ $('#src').value = SAMPLE; doParse(); });
+$('#btnParse').addEventListener('click', doParse);
+
+/* ------------------------------------------------------------- parsowanie */
+function doParse(){
+  state.src = $('#src').value;
+  if (!state.src.trim()) { $('#parseOut').innerHTML = '<div class="msg err">Najpierw wklej treść drabinki.</div>'; return; }
+  state.parsed = RPE.parseDrabinka(state.src);
+  if (!state.parsed.scenes.length){
+    $('#parseOut').innerHTML = '<div class="msg err"><b>Nie znaleziono ani jednej sceny.</b><br>' +
+      'Sprawdź, czy nagłówki mają postać <span class="kbd">1. WN. LOKACJA - SUBLOKACJA. DZIEŃ 1 (11.24)</span>, ' +
+      'a lista postaci stoi w nawiasie w kolejnej linii.</div>';
+    return;
+  }
+  rebuild(false);
+  renderParseReport();
+  goTab('t2');
+}
+
+function rebuild(keepEdits){
+  var edits = keepEdits ? snapshotEdits() : null;
+  state.model = RPE.buildModel(state.parsed, state.cfg);
+  if (edits) restoreEdits(edits);
+  renderEditors();
+}
+function snapshotEdits(){
+  var m = state.model; if(!m) return null;
+  var e = { people:{}, locs:{}, pps:{}, veh: m.vehicles };
+  m.regulars.concat(m.episodics, m.extras).forEach(function(p){
+    e.people[RPE.norm(p.display)] = { display:p.display, age:p.age, desc:p.desc, kind:p.kind };
+  });
+  m.fixedLocations.concat(m.paidLocations).forEach(function(L){
+    e.locs[L.key] = { name:L.name, note:L.note, fixed:L.fixed,
+      subs: L.subList.map(function(S){ return S.name; }) };
+  });
+  m.pps.forEach(function(x){ e.pps[x.id] = { title:x.title, day:x.day, desc:x.desc }; });
+  return e;
+}
+function restoreEdits(e){
+  var m = state.model;
+  // 1) opisy, wiek, ewentualna zmiana nazwy
+  m.regulars.concat(m.episodics, m.extras).forEach(function(p){
+    var s = e.people[RPE.norm(p.display)];
+    if (!s) return;
+    if (s.age !== undefined)  p.age  = s.age;
+    if (s.desc !== undefined) p.desc = s.desc;
+    if (s.display) p.display = s.display;
+  });
+  // 2) ręczne przeniesienia między sekcjami (np. statysta → epizod)
+  m.regulars.concat(m.episodics, m.extras).slice().forEach(function(p){
+    var s = e.people[RPE.norm(p.display)];
+    if (s && s.kind && s.kind !== p.kind) moveSilent(p, p.kind, s.kind);
+  });
+  m.fixedLocations.concat(m.paidLocations).forEach(function(L){
+    var s = e.locs[L.key];
+    if (s){ L.name = s.name || L.name; L.note = s.note || '';
+      L.subList.forEach(function(S,i){ if (s.subs[i]) S.name = s.subs[i]; });
+      RPE.remergeSubs(L);
+    }
+  });
+  m.pps.forEach(function(x){ var s = e.pps[x.id]; if (s){ x.title=s.title; x.day=s.day; x.desc=s.desc; } });
+  if (e.veh && e.veh.length) m.vehicles = e.veh;
+}
+
+function renderParseReport(){
+  var p = state.parsed, m = state.model;
+  var h = [];
+  h.push('<div class="card"><h2>Wynik analizy</h2><div class="stats">' +
+    stat(p.scenes.length,'scen') +
+    stat(m.regulars.length,'postaci stałych') +
+    stat(m.episodics.length,'epizodów') +
+    stat(m.extras.length,'statystów') +
+    stat(m.paidLocations.length,'lokacji płatnych') +
+    stat(m.fixedLocations.length,'lokacji stałych') +
+    '</div>');
+  if (p.warnings.length){
+    h.push('<div class="msg warn" style="margin-top:14px"><b>Do sprawdzenia:</b><br>' +
+      p.warnings.map(esc).join('<br>') + '</div>');
+  } else {
+    h.push('<div class="msg ok" style="margin-top:14px">Wszystkie nagłówki i listy postaci rozpoznane poprawnie.</div>');
+  }
+  h.push('<details><summary>Pokaż rozbiór wszystkich scen</summary><table class="scenes"><tr>' +
+    '<th>Nr</th><th>WN/PL</th><th>Lokacja</th><th>Sublokacja</th><th>Pora</th><th>Godz.</th><th>Postacie</th></tr>' +
+    p.scenes.map(function(s){
+      return '<tr><td><b>'+esc(s.number)+'</b></td><td>'+esc(s.intExt)+'</td><td>'+esc(s.location)+'</td>' +
+        '<td>'+esc(s.subLocation)+'</td><td>'+esc(s.dayPart+' '+s.dayNumber)+'</td><td>'+esc(s.time)+'</td>' +
+        '<td>'+s.characters.map(function(c){ return esc(c.name)+(c.off?' <i>(off)</i>':''); }).join(', ')+'</td></tr>';
+    }).join('') + '</table></details></div>');
+  $('#parseOut').innerHTML = h.join('');
+}
+function stat(v,k){ return '<div class="stat"><div class="v">'+v+'</div><div class="k">'+k+'</div></div>'; }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* --------------------------------------------------------------- EDYTORY */
+function renderEditors(){
+  var m = state.model; if(!m) return;
+  renderPeople('#edRegulars', m.regulars, 'regular');
+  renderPeople('#edEpisodics', m.episodics, 'episodic');
+  renderPeople('#edExtras', m.extras, 'extra');
+  renderLocations();
+  renderPPS();
+  renderVehicles();
+}
+
+function sceneChips(p){
+  return p.scenes.map(function(s){ return s.n + (s.off ? ' (off)' : ''); }).join(', ');
+}
+
+function renderPeople(sel, arr, kind){
+  var host = $(sel);
+  if (!arr.length){ host.innerHTML = '<p class="hint" style="margin:0">Brak pozycji.</p>'; return; }
+  host.innerHTML = '';
+  arr.forEach(function(p, i){
+    var d = document.createElement('div'); d.className = 'itm';
+    var moves = '';
+    if (kind !== 'regular') moves += '<button class="ghost" data-act="toRegular">→ castingowa</button>';
+    if (kind !== 'episodic') moves += '<button class="ghost" data-act="toEpisodic">→ epizody</button>';
+    if (kind !== 'extra')    moves += '<button class="ghost" data-act="toExtra">→ statyści</button>';
+    d.innerHTML =
+      '<div class="top">' +
+        '<input class="nm" type="text" value="'+esc(p.display)+'">' +
+        (kind==='regular' ? '' : '<input class="age" type="text" placeholder="wiek" value="'+esc(p.age)+'">') +
+        moves +
+        (kind==='regular' ? '<button class="ghost" data-act="up">↑</button><button class="ghost" data-act="down">↓</button>' : '') +
+      '</div>' +
+      (kind==='regular' ? '' :
+        '<textarea rows="2" placeholder="Krótki opis wyglądu i charakteru postaci…">'+esc(p.desc)+'</textarea>') +
+      '<div class="sc">sceny: '+esc(sceneChips(p))+'</div>';
+    host.appendChild(d);
+
+    d.querySelector('.nm').addEventListener('input', function(){ p.display = this.value; });
+    var ageEl = d.querySelector('.age'); if (ageEl) ageEl.addEventListener('input', function(){ p.age = this.value; });
+    var ta = d.querySelector('textarea'); if (ta) ta.addEventListener('input', function(){ p.desc = this.value; });
+    d.querySelectorAll('[data-act]').forEach(function(b){
+      b.addEventListener('click', function(){
+        var a = b.dataset.act;
+        if (a === 'up' || a === 'down'){
+          var j = a==='up' ? i-1 : i+1;
+          if (j>=0 && j<arr.length){ var t=arr[i]; arr[i]=arr[j]; arr[j]=t; renderEditors(); }
+          return;
+        }
+        move(p, kind, a==='toRegular'?'regular':a==='toEpisodic'?'episodic':'extra');
+      });
+    });
+  });
+}
+function bucket(kind){
+  return kind==='regular' ? state.model.regulars : kind==='episodic' ? state.model.episodics : state.model.extras;
+}
+function moveSilent(p, from, to){
+  var src = bucket(from), dst = bucket(to);
+  var i = src.indexOf(p); if (i>-1) src.splice(i,1);
+  p.kind = to; dst.push(p);
+  dst.sort(function(a,b){
+    if (!a.scenes.length || !b.scenes.length) return 0;
+    if (to==='regular' && b.scenes.length!==a.scenes.length) return b.scenes.length-a.scenes.length;
+    return RPE.cmpScene(a.scenes[0].n, b.scenes[0].n);
+  });
+}
+function move(p, from, to){ moveSilent(p, from, to); renderEditors(); }
+
+function renderLocations(){
+  var m = state.model, host = $('#edLocations');
+  host.innerHTML = '';
+  var all = m.fixedLocations.map(function(L){return {L:L,fixed:true};})
+    .concat(m.paidLocations.map(function(L){return {L:L,fixed:false};}));
+  all.forEach(function(o){
+    var L = o.L;
+    var d = document.createElement('div'); d.className='itm';
+    var dn = [];
+    if (L.dayCount) dn.push(RPE.plScen(L.dayCount)+' dzień');
+    if (L.nightCount) dn.push(RPE.plScen(L.nightCount)+' noc');
+    d.innerHTML =
+      '<div class="top">' +
+        '<input class="nm" type="text" value="'+esc(L.name)+'">' +
+        '<label style="margin:0;display:flex;align-items:center;gap:6px;color:var(--dim);font-size:12.5px">' +
+          '<input type="checkbox" class="fx" style="width:auto"'+(L.fixed?' checked':'')+'> stała</label>' +
+      '</div>' +
+      '<input class="note" type="text" style="margin-top:8px" placeholder="Notatka realizacyjna (opcjonalnie)" value="'+esc(L.note||'')+'">' +
+      '<div class="sc">'+esc(dn.join(', '))+' — sceny: '+esc(L.scenes.map(function(s){return s.n;}).join(', '))+'</div>' +
+      '<div class="subs">' + L.subList.map(function(S,i){
+        if (!S.name && L.subList.length===1) return '';
+        return '<div class="sub-row"><input type="text" data-i="'+i+'" value="'+esc(S.name)+'">' +
+               '<span class="sc">('+esc(S.scenes.join(', '))+')</span></div>';
+      }).join('') + '</div>';
+    host.appendChild(d);
+
+    d.querySelector('.nm').addEventListener('input', function(){ L.name = this.value; });
+    d.querySelector('.note').addEventListener('input', function(){ L.note = this.value; });
+    d.querySelector('.fx').addEventListener('change', function(){
+      L.fixed = this.checked;
+      var from = L.fixed ? m.paidLocations : m.fixedLocations;
+      var to   = L.fixed ? m.fixedLocations : m.paidLocations;
+      var i = from.indexOf(L); if (i>-1) from.splice(i,1);
+      to.push(L);
+      to.sort(function(a,b){ return RPE.cmpScene(a.scenes[0].n, b.scenes[0].n); });
+      renderLocations();
+    });
+    d.querySelectorAll('.subs input').forEach(function(inp){
+      inp.addEventListener('input', function(){
+        var S = L.subList[+inp.dataset.i]; if (!S) return;
+        S.name = inp.value;
+      });
+      inp.addEventListener('change', function(){
+        var S = L.subList[+inp.dataset.i]; if (!S) return;
+        S.name = inp.value;
+        RPE.remergeSubs(L);
+        renderLocations();
+      });
+    });
+  });
+}
+
+function renderPPS(){
+  var m = state.model, host = $('#edPPS');
+  if (!m.pps.length){ host.innerHTML = '<p class="hint" style="margin:0">Nie wykryto żadnych PPS-ów w drabince.</p>'; return; }
+  host.innerHTML = '';
+  m.pps.forEach(function(x){
+    var d = document.createElement('div'); d.className='itm';
+    d.innerHTML =
+      '<div class="top"><b style="min-width:56px">'+esc(x.id)+'</b>' +
+        '<input class="ti" type="text" style="flex:1" placeholder="Nazwa, np. wycinek z gazety Artura" value="'+esc(x.title)+'">' +
+        '<input class="dy" type="text" style="width:110px" placeholder="Dzień 0" value="'+esc(x.day)+'"></div>' +
+      '<textarea class="ds" rows="2" placeholder="Opis: co widać / co słychać na materiale…">'+esc(x.desc)+'</textarea>' +
+      '<div class="sc">sceny: '+esc(x.scenes.join(', '))+'</div>';
+    host.appendChild(d);
+    d.querySelector('.ti').addEventListener('input', function(){ x.title = this.value; });
+    d.querySelector('.dy').addEventListener('input', function(){ x.day = this.value; });
+    d.querySelector('.ds').addEventListener('input', function(){ x.desc = this.value; });
+  });
+}
+$('#btnAddPPS').addEventListener('click', function(){
+  if (!state.model) return;
+  var n = state.model.pps.length + 1;
+  state.model.pps.push({ id:'PPS'+n, scenes:[], title:'', day:'', desc:'' });
+  renderPPS();
+});
+
+function renderVehicles(){
+  var m = state.model, host = $('#edVehicles');
+  host.innerHTML = '';
+  if (!m.vehicles.length) host.innerHTML = '<p class="hint" style="margin:0">Brak — dodaj ręcznie lub uzupełnij przez AI.</p>';
+  m.vehicles.forEach(function(v, i){
+    var d = document.createElement('div'); d.className='itm';
+    d.innerHTML =
+      '<div class="top"><input class="nm" type="text" value="'+esc(v.name)+'" placeholder="Nazwa pojazdu">' +
+      '<button class="ghost" data-del="1">usuń</button></div>' +
+      '<input class="ds" type="text" style="margin-top:8px" placeholder="Opis / model, np. sedan, ciemny" value="'+esc(v.desc||'')+'">' +
+      '<div class="row" style="margin-top:8px"><label style="margin:0;min-width:56px">Sceny</label>' +
+      '<input class="sn" type="text" style="flex:1" value="'+esc((v.scenes||[]).join(', '))+'"></div>';
+    host.appendChild(d);
+    d.querySelector('.nm').addEventListener('input', function(){ v.name = this.value; });
+    d.querySelector('.ds').addEventListener('input', function(){ v.desc = this.value; });
+    d.querySelector('.sn').addEventListener('input', function(){
+      v.scenes = this.value.split(',').map(function(x){return x.trim();}).filter(Boolean);
+    });
+    d.querySelector('[data-del]').addEventListener('click', function(){ m.vehicles.splice(i,1); renderVehicles(); });
+  });
+}
+$('#btnAddVeh').addEventListener('click', function(){
+  if (!state.model) return;
+  state.model.vehicles.push({ name:'', desc:'', scenes:[] });
+  renderVehicles();
+});
+
+/* --------------------------------------------------------------- PODGLĄD */
+function currentBlocks(){
+  if (!state.model) return [];
+  state.model.meta = {
+    title: $('#mTitle').value.trim(),
+    episode: $('#mEp').value.trim(),
+    episodeGlobal: $('#mEpG').value.trim(),
+    pair: $('#mPair').value.trim()
+  };
+  return RPE.renderDoc(state.model, {
+    showCounts: $('#optCounts').checked,
+    headerTitle: $('#optHeader').checked
+  });
+}
+function renderPreview(){
+  var b = currentBlocks(), host = $('#preview');
+  if (!b.length){ host.innerHTML = '<i style="color:#888">Najpierw przeanalizuj drabinkę w zakładce 1.</i>'; return; }
+  host.innerHTML = b.map(function(x){
+    switch(x.style){
+      case 'title': return '<div class="pt">'+esc(x.text)+'</div>';
+      case 'h':     return '<div class="ph">'+esc(x.text)+'</div>';
+      case 'h2':    return '<div class="ph2">'+esc(x.text)+'</div>';
+      case 'li1':   return '<div class="l1">● '+esc(x.text)+'</div>';
+      case 'li2':   return '<div class="l2">○ '+esc(x.text)+'</div>';
+      case 'note':  return '<div class="nt">'+esc(x.text)+'</div>';
+      default:      return '<div class="sp"></div>';
+    }
+  }).join('');
+}
+['#mTitle','#mEp','#mEpG','#mPair'].forEach(function(s){
+  $(s).addEventListener('input', renderPreview);
+});
+$('#optCounts').addEventListener('change', renderPreview);
+$('#optHeader').addEventListener('change', renderPreview);
+
+$('#btnCopy').addEventListener('click', function(){
+  var t = RPE.blocksToText(currentBlocks());
+  navigator.clipboard.writeText(t).then(function(){ toast('#t3','ok','Skopiowano do schowka.'); },
+    function(){ toast('#t3','err','Przeglądarka zablokowała schowek — pobierz .txt.'); });
+});
+$('#btnTxt').addEventListener('click', function(){
+  download(fileBase()+'.txt', new Blob([RPE.blocksToText(currentBlocks())], {type:'text/plain;charset=utf-8'}));
+});
+$('#btnDocx').addEventListener('click', function(){
+  download(fileBase()+'.docx', docxBlob(currentBlocks()));
+});
+/* Nazwy plików bez polskich znaków — Chrome ignoruje atrybut download,
+   jeśli nazwa dla blob-a zawiera znaki spoza ASCII. */
+function slug(s){
+  return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/ł/g,'l').replace(/Ł/g,'L')
+    .replace(/[^A-Za-z0-9._-]+/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'');
+}
+function fileBase(){
+  var t = slug($('#mTitle').value || 'rozpiska');
+  var e = slug($('#mEp').value);
+  return (e ? 'odc'+e+'_' : '') + (t || 'rozpiska');
+}
+function download(name, blob){
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+}
+
+/* ------------------------------------------------------------ EKSPORT DOCX */
+function xesc(s){
+  return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'');
+}
+function wPara(text, o){
+  o = o || {};
+  var pPr = '<w:pPr><w:spacing w:before="'+(o.before||0)+'" w:after="'+(o.after||0)+'" w:line="264" w:lineRule="auto"/>' +
+    (o.ind ? '<w:ind w:left="'+o.ind+'" w:hanging="'+(o.hang||0)+'"/>' : '') +
+    '<w:rPr>'+(o.b?'<w:b/>':'')+(o.i?'<w:i/>':'')+'<w:sz w:val="'+(o.sz||22)+'"/></w:rPr></w:pPr>';
+  var rPr = '<w:rPr>'+(o.b?'<w:b/>':'')+(o.i?'<w:i/>':'')+
+    '<w:sz w:val="'+(o.sz||22)+'"/><w:szCs w:val="'+(o.sz||22)+'"/></w:rPr>';
+  return '<w:p>'+pPr+'<w:r>'+rPr+'<w:t xml:space="preserve">'+xesc(text)+'</w:t></w:r></w:p>';
+}
+function blocksToDocxBody(blocks){
+  return blocks.map(function(b){
+    switch(b.style){
+      case 'title': return wPara(b.text, {b:true, sz:28, after:140});
+      case 'h':     return wPara(b.text, {b:true, sz:24, before:180, after:60});
+      case 'h2':    return wPara(b.text, {b:true, sz:22, before:100, after:40});
+      case 'li1':   return wPara('● '+b.text, {ind:360, hang:220, after:20});
+      case 'li2':   return wPara('○ '+b.text, {ind:900, hang:220, after:20});
+      case 'note':  return wPara(b.text, {ind:640, i:true, after:20});
+      default:      return wPara('', {sz:14});
+    }
+  }).join('');
+}
+function docxBlob(blocks){
+  var body = blocksToDocxBody(blocks);
+  var doc =
+'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+'<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
+'<w:body>' + body +
+'<w:sectPr><w:pgSz w:w="11906" w:h="16838"/>' +
+'<w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="708" w:footer="708" w:gutter="0"/>' +
+'</w:sectPr></w:body></w:document>';
+  var styles =
+'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+'<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
+'<w:docDefaults><w:rPrDefault><w:rPr>' +
+'<w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/><w:sz w:val="22"/><w:szCs w:val="22"/>' +
+'<w:lang w:val="pl-PL"/></w:rPr></w:rPrDefault></w:docDefaults>' +
+'<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>' +
+'</w:styles>';
+  var ct =
+'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+'<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+'<Default Extension="xml" ContentType="application/xml"/>' +
+'<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>' +
+'<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>' +
+'</Types>';
+  var rels =
+'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>' +
+'</Relationships>';
+  var drels =
+'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
+'</Relationships>';
+  return zipBlob([
+    { name:'[Content_Types].xml', str:ct },
+    { name:'_rels/.rels', str:rels },
+    { name:'word/document.xml', str:doc },
+    { name:'word/styles.xml', str:styles },
+    { name:'word/_rels/document.xml.rels', str:drels }
+  ], 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+}
+
+/* Minimalny writer ZIP (metoda STORE) — bez żadnych bibliotek zewnętrznych. */
+var CRC_T = (function(){
+  var t = new Uint32Array(256);
+  for (var n=0;n<256;n++){ var c=n; for (var k=0;k<8;k++) c = (c&1) ? (0xEDB88320 ^ (c>>>1)) : (c>>>1); t[n]=c>>>0; }
+  return t;
+})();
+function crc32(u8){
+  var c = 0xFFFFFFFF;
+  for (var i=0;i<u8.length;i++) c = CRC_T[(c ^ u8[i]) & 0xFF] ^ (c>>>8);
+  return (c ^ 0xFFFFFFFF)>>>0;
+}
+function zipBlob(entries, mime){
+  var enc = new TextEncoder();
+  var chunks = [], central = [], offset = 0;
+  entries.forEach(function(e){
+    var data = enc.encode(e.str), name = enc.encode(e.name), cr = crc32(data);
+    var lh = new Uint8Array(30 + name.length), v = new DataView(lh.buffer);
+    v.setUint32(0, 0x04034b50, true); v.setUint16(4, 20, true); v.setUint16(6, 0x0800, true);
+    v.setUint16(8, 0, true); v.setUint16(10, 0, true); v.setUint16(12, 0, true);
+    v.setUint32(14, cr, true); v.setUint32(18, data.length, true); v.setUint32(22, data.length, true);
+    v.setUint16(26, name.length, true); v.setUint16(28, 0, true);
+    lh.set(name, 30);
+    chunks.push(lh, data);
+
+    var ch = new Uint8Array(46 + name.length), c2 = new DataView(ch.buffer);
+    c2.setUint32(0, 0x02014b50, true); c2.setUint16(4, 20, true); c2.setUint16(6, 20, true);
+    c2.setUint16(8, 0x0800, true); c2.setUint16(10, 0, true); c2.setUint16(12, 0, true); c2.setUint16(14, 0, true);
+    c2.setUint32(16, cr, true); c2.setUint32(20, data.length, true); c2.setUint32(24, data.length, true);
+    c2.setUint16(28, name.length, true); c2.setUint16(30, 0, true); c2.setUint16(32, 0, true);
+    c2.setUint16(34, 0, true); c2.setUint16(36, 0, true); c2.setUint32(38, 0, true);
+    c2.setUint32(42, offset, true);
+    ch.set(name, 46);
+    central.push(ch);
+    offset += lh.length + data.length;
+  });
+  var cdSize = central.reduce(function(a,b){ return a + b.length; }, 0);
+  var eocd = new Uint8Array(22), e = new DataView(eocd.buffer);
+  e.setUint32(0, 0x06054b50, true); e.setUint16(4, 0, true); e.setUint16(6, 0, true);
+  e.setUint16(8, entries.length, true); e.setUint16(10, entries.length, true);
+  e.setUint32(12, cdSize, true); e.setUint32(16, offset, true); e.setUint16(20, 0, true);
+  return new Blob(chunks.concat(central, [eocd]), { type: mime || 'application/zip' });
+}
+
+/* ------------------------------------------------------------------- AI */
+function aiPrompt(){
+  var m = state.model, s = state.parsed;
+  var skeleton = {
+    postacie_epizodyczne: m.episodics.map(function(p){ return { nazwa:p.display, sceny:p.scenes.map(function(x){return x.n;}), wiek:p.age||null }; }),
+    statysci: m.extras.map(function(p){ return { nazwa:p.display, sceny:p.scenes.map(function(x){return x.n;}) }; }),
+    pps: m.pps.map(function(x){ return { id:x.id, sceny:x.scenes }; }),
+    lokacje: m.paidLocations.map(function(L){ return L.name; })
+  };
+  return [
+'Jesteś doświadczonym asystentem scenariuszowym i kierownikiem produkcji serialu obyczajowo-kryminalnego.',
+'Poniżej masz DRABINKĘ odcinka oraz SZKIELET rozpiski produkcyjnej, w którym numery scen, przypisania',
+'postaci i lokacje są już policzone deterministycznie i są POPRAWNE.',
+'',
+'TWOJE ZADANIE: uzupełnij WYŁĄCZNIE opisy. Nie zmieniaj, nie dodawaj i nie usuwaj żadnych numerów scen',
+'ani nazw z szkieletu. Zwróć wyłącznie poprawny JSON, bez komentarzy i bez bloku markdown.',
+'',
+'Format odpowiedzi:',
+'{',
+'  "postacie": [{"nazwa":"<dokładnie jak w szkielecie>","wiek":"32","opis":"jedno-dwa zdania: wygląd i charakter, w stylu castingowym"}],',
+'  "statysci": [{"nazwa":"<jak w szkielecie>","opis":"zwięzły opis, może być pusty"}],',
+'  "pps":      [{"id":"PPS1","tytul":"krótka nazwa materiału","dzien":"Dzień 0","opis":"co widać/słychać na materiale"}],',
+'  "pojazdy":  [{"nazwa":"Samochód Mokrasa","opis":"sedan, ciemny, popularny model","sceny":"1, 9, 10, 22, 23"}],',
+'  "lokacje":  [{"nazwa":"<jak w szkielecie>","notatka":"jedno zdanie o charakterze miejsca, np. Osiedlowa siłownia, z dala od centrum."}],',
+'  "przeklasyfikuj": [{"nazwa":"X","do":"statysci|epizod|stala"}]',
+'}',
+'',
+'Zasady:',
+'- Opisy postaci epizodycznych: wiek + zwięzły, obrazowy opis wyglądu i charakteru, przydatny castingowi.',
+'- Wiek podaj tylko wtedy, gdy wynika z drabinki albo jest logiczny dla roli.',
+'- W "pojazdy" wypisz wszystkie auta pojawiające się w treści scen (radiowozy, auta podejrzanych, ofiar, karetki)',
+'  wraz z listą scen, w których faktycznie występują.',
+'- W "przeklasyfikuj" wskaż pozycje błędnie zaklasyfikowane (np. postać z kwestiami wrzucona do statystów).',
+'- Pisz po polsku.',
+'',
+'=== SZKIELET ===',
+JSON.stringify(skeleton, null, 1),
+'',
+'=== DRABINKA ===',
+state.src
+  ].join('\n');
+}
+
+function applyAI(data){
+  var m = state.model;
+  function findPerson(nazwa){
+    var k = RPE.norm(nazwa);
+    var all = m.regulars.concat(m.episodics, m.extras);
+    for (var i=0;i<all.length;i++) if (RPE.norm(all[i].display) === k) return all[i];
+    for (var j=0;j<all.length;j++) if (RPE.norm(all[j].display).indexOf(k)>-1 || k.indexOf(RPE.norm(all[j].display))>-1) return all[j];
+    return null;
+  }
+  (data.postacie||[]).forEach(function(x){
+    var p = findPerson(x.nazwa); if(!p) return;
+    if (x.wiek) p.age = String(x.wiek).replace(/\D/g,'');
+    if (x.opis) p.desc = x.opis;
+  });
+  (data.statysci||[]).forEach(function(x){
+    var p = findPerson(x.nazwa); if(!p) return;
+    if (x.opis) p.desc = x.opis;
+  });
+  (data.pps||[]).forEach(function(x){
+    var hit = m.pps.filter(function(y){ return RPE.norm(y.id)===RPE.norm(x.id); })[0];
+    if (!hit){ hit = { id:x.id, scenes:[], title:'', day:'', desc:'' }; m.pps.push(hit); }
+    if (x.tytul) hit.title = x.tytul;
+    if (x.dzien) hit.day = x.dzien;
+    if (x.opis)  hit.desc = x.opis;
+  });
+  if (data.pojazdy && data.pojazdy.length){
+    data.pojazdy.forEach(function(x){
+      var scenes = String(x.sceny||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+      var hit = m.vehicles.filter(function(v){ return RPE.norm(v.name).indexOf(RPE.norm(x.nazwa))>-1 ||
+                                                      RPE.norm(x.nazwa).indexOf(RPE.norm(v.name))>-1; })[0];
+      if (hit){ if (x.opis) hit.desc = x.opis; if (scenes.length) hit.scenes = RPE.sortScenes(scenes); }
+      else m.vehicles.push({ name:x.nazwa, desc:x.opis||'', scenes: RPE.sortScenes(scenes) });
+    });
+  }
+  (data.lokacje||[]).forEach(function(x){
+    var k = RPE.norm(x.nazwa);
+    m.paidLocations.concat(m.fixedLocations).forEach(function(L){
+      if (RPE.norm(L.name) === k && x.notatka) L.note = x.notatka;
+    });
+  });
+  (data.przeklasyfikuj||[]).forEach(function(x){
+    var p = findPerson(x.nazwa); if(!p) return;
+    var to = x.do==='stala' ? 'regular' : x.do==='statysci' ? 'extra' : 'episodic';
+    if (p.kind !== to) move(p, p.kind, to);
+  });
+  renderEditors();
+}
+
+async function callAPI(prompt, maxTokens){
+  if (!state.api.key) throw new Error('Brak klucza API — wpisz go w Ustawieniach albo użyj trybu „Kopiuj prompt”.');
+  var res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{
+      'content-type':'application/json',
+      'x-api-key': state.api.key,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body: JSON.stringify({
+      model: state.api.model,
+      max_tokens: maxTokens || 8000,
+      messages: [{ role:'user', content: prompt }]
+    })
+  });
+  if (!res.ok){
+    var t = await res.text();
+    throw new Error('API ' + res.status + ': ' + t.slice(0,300));
+  }
+  var j = await res.json();
+  return (j.content||[]).map(function(c){ return c.text||''; }).join('');
+}
+function extractJSON(t){
+  var s = t.replace(/```json/gi,'```').split('```');
+  var cand = s.length>1 ? s[1] : t;
+  var a = cand.indexOf('{'), b = cand.lastIndexOf('}');
+  if (a<0 || b<0) throw new Error('W odpowiedzi nie znaleziono JSON-a.');
+  return JSON.parse(cand.slice(a, b+1));
+}
+
+$('#btnAI').addEventListener('click', async function(){
+  if (!state.model) return toast('#t2','err','Najpierw przeanalizuj drabinkę.');
+  var st = $('#aiStatus');
+  st.innerHTML = '<span class="spin"></span>Model pracuje…';
+  this.disabled = true;
+  try{
+    var out = await callAPI(aiPrompt());
+    applyAI(extractJSON(out));
+    st.textContent = '';
+    toast('#t2','ok','Opisy uzupełnione. Sprawdź i popraw, co trzeba.');
+  } catch(e){
+    st.textContent = '';
+    toast('#t2','err', e.message);
+  } finally { this.disabled = false; }
+});
+$('#btnPrompt').addEventListener('click', function(){
+  if (!state.model) return toast('#t2','err','Najpierw przeanalizuj drabinkę.');
+  navigator.clipboard.writeText(aiPrompt()).then(function(){
+    toast('#t2','info','Prompt w schowku. Wklej go w Claude lub ChatGPT, a zwrócony JSON wklej przyciskiem „Wklej odpowiedź AI”.');
+    $('#pasteBox').style.display = 'block';
+  });
+});
+$('#btnPasteJSON').addEventListener('click', function(){
+  var b = $('#pasteBox'); b.style.display = b.style.display==='none' ? 'block' : 'none';
+});
+$('#btnApplyJSON').addEventListener('click', function(){
+  try { applyAI(extractJSON($('#aiJSON').value)); toast('#t2','ok','Zastosowano.'); }
+  catch(e){ toast('#t2','err','Nie udało się odczytać JSON-a: '+e.message); }
+});
+
+$('#btnModels').addEventListener('click', async function(){
+  if (!state.api.key) return toast('#t5','err','Najpierw wpisz klucz API.');
+  try{
+    var res = await fetch('https://api.anthropic.com/v1/models?limit=50', {
+      headers:{ 'x-api-key': state.api.key, 'anthropic-version':'2023-06-01',
+                'anthropic-dangerous-direct-browser-access':'true' }
+    });
+    var j = await res.json();
+    var sel = $('#modelSel'); sel.innerHTML = '';
+    (j.data||[]).forEach(function(m){
+      var o = document.createElement('option'); o.value = m.id;
+      o.textContent = (m.display_name || m.id) + ' — ' + m.id;
+      sel.appendChild(o);
+    });
+    sel.style.display = 'block';
+    sel.addEventListener('change', function(){ $('#apiModel').value = this.value; state.api.model = this.value; });
+    toast('#t5','ok','Pobrano '+(j.data||[]).length+' modeli.');
+  } catch(e){ toast('#t5','err','Nie udało się pobrać listy: '+e.message); }
+});
+
+/* ------------------------------------------------------------ STRESZCZENIE */
+function sumPrompt(){
+  var ep = $('#sEp').value.trim(), epg = $('#sEpG').value.trim();
+  var ti = $('#sTitle').value.trim(), pr = $('#sPair').value.trim();
+  return [
+'Jesteś asystentem scenariuszowym serialu obyczajowo-kryminalnego. Napisz streszczenie odcinka',
+'w standardzie promocyjnym i prasowym.',
+'',
+'FORMAT — dokładnie taki nagłówek w pierwszej linii:',
+'Odc. ' + (ep||'[NR]') + (epg ? ' ('+epg+')' : ' ([NR GLOBALNY])') + ' – ' + (ti||'[TYTUŁ]') +
+  ' (para ' + (pr||'[DETEKTYWI]') + ')',
+'',
+'Potem DWA akapity:',
+'1) Sprawa główna (kryminalna): punkt wyjścia śledztwa, pierwsze ustalenia, podejrzani, zwrot akcji,',
+'   zakończony pytaniem budującym napięcie.',
+'2) Wątek prywatny: krótko o wątku obyczajowym bohaterów.',
+'',
+'Styl: dynamiczny, zwięzły, prasowo-zapowiedziowy. Łącznie 80–150 słów. Nie zdradzaj zakończenia',
+'sprawy głównej. Zwróć sam tekst streszczenia, bez komentarzy.',
+'',
+'=== DRABINKA ODCINKA ===',
+state.src
+  ].join('\n');
+}
+$('#btnSum').addEventListener('click', async function(){
+  if (!state.src.trim()) return toast('#t4','err','Najpierw wklej drabinkę w zakładce 1.');
+  var st = $('#sumStatus'); st.innerHTML = '<span class="spin"></span>Piszę…'; this.disabled = true;
+  try{
+    $('#sumText').value = (await callAPI(sumPrompt(), 1500)).trim();
+    st.textContent = '';
+  } catch(e){ st.textContent=''; toast('#t4','err',e.message); }
+  finally{ this.disabled = false; }
+});
+$('#btnSumPrompt').addEventListener('click', function(){
+  navigator.clipboard.writeText(sumPrompt()).then(function(){
+    toast('#t4','info','Prompt w schowku — wklej go w Claude i wróć z gotowym tekstem.');
+  });
+});
+$('#btnSumCopy').addEventListener('click', function(){
+  navigator.clipboard.writeText($('#sumText').value).then(function(){ toast('#t4','ok','Skopiowano.'); });
+});
+$('#btnSumDocx').addEventListener('click', function(){
+  var lines = $('#sumText').value.split('\n');
+  var blocks = lines.map(function(l,i){
+    if (!l.trim()) return { style:'spacer', text:'' };
+    return { style: i===0 ? 'title' : 'p', text: l };
+  });
+  var body = blocks.map(function(b){
+    if (b.style==='title') return wPara(b.text,{b:true,sz:26,after:160});
+    if (b.style==='spacer') return wPara('',{sz:14});
+    return wPara(b.text,{after:120});
+  }).join('');
+  download(($('#sEp').value ? 'odc'+$('#sEp').value+'_' : '')+'streszczenie.docx', docxBlobRaw(body));
+});
+function docxBlobRaw(body){
+  var saved = blocksToDocxBody;
+  blocksToDocxBody = function(){ return body; };
+  var b = docxBlob([]);
+  blocksToDocxBody = saved;
+  return b;
+}
+
+/* -------------------------------------------------------------- PROJEKT */
+$('#btnSaveProj').addEventListener('click', function(){
+  var proj = {
+    v: 1,
+    src: $('#src').value,
+    cfg: readCfgUI(),
+    meta: { title:$('#mTitle').value, ep:$('#mEp').value, epg:$('#mEpG').value, pair:$('#mPair').value },
+    summary: $('#sumText').value,
+    edits: snapshotEdits(),
+    vehicles: state.model ? state.model.vehicles : [],
+    pps: state.model ? state.model.pps : []
+  };
+  download((fileBase()||'projekt')+'.json',
+    new Blob([JSON.stringify(proj,null,1)], {type:'application/json'}));
+});
+$('#btnLoadProj').addEventListener('click', function(){ $('#projFile').click(); });
+$('#projFile').addEventListener('change', function(){
+  var f = this.files[0]; if(!f) return;
+  var r = new FileReader();
+  r.onload = function(){
+    try{
+      var p = JSON.parse(String(r.result));
+      $('#src').value = p.src || '';
+      if (p.cfg){ state.cfg = p.cfg; loadCfgUI(state.cfg); }
+      state.src = $('#src').value;
+      state.parsed = RPE.parseDrabinka(state.src);
+      state.model = RPE.buildModel(state.parsed, state.cfg);
+      if (p.edits) restoreEdits(p.edits);
+      if (p.vehicles) state.model.vehicles = p.vehicles;
+      if (p.pps && p.pps.length) state.model.pps = p.pps;
+      if (p.meta){ $('#mTitle').value=p.meta.title||''; $('#mEp').value=p.meta.ep||'';
+                   $('#mEpG').value=p.meta.epg||''; $('#mPair').value=p.meta.pair||'';
+                   $('#sTitle').value=p.meta.title||''; $('#sEp').value=p.meta.ep||'';
+                   $('#sEpG').value=p.meta.epg||''; $('#sPair').value=p.meta.pair||''; }
+      $('#sumText').value = p.summary || '';
+      renderEditors(); renderParseReport();
+      toast('#t5','ok','Projekt wczytany.');
+      goTab('t2');
+    } catch(e){ toast('#t5','err','Nie udało się wczytać projektu: '+e.message); }
+  };
+  r.readAsText(f,'utf-8');
+});
+
+/* ------------------------------------------------------------- przykład */
+var SAMPLE = "GLINIARZE21- drabinka odc.59(1274)\nDOMY NIESPOKOJNEJ STAROŚCI (para Adam - Olga)\n\n1. WN. MIESZKANIE EDWARDA- KORYTARZ. DZIEŃ 1 (11.24)\n(Benek Więcek, Edward)\nW mieszkaniu emerytowanego Edwarda(70) słychać dźwięk otwierającego się zamka w drzwiach. Drzwi do mieszkania otwierają się, do środka wchodzi zamaskowany mężczyzna (Benek Więcek(25)). Zamyka za sobą drzwi i od razu sięga do stojącej w korytarzu szafki. Chwilę ją przeszukuje, ale w końcu znajduje pudełko (skarbonkę), z której wyciąga kilka banknotów i naszyjnik. Zadowolony mężczyzna uśmiecha się do siebie. Nagle z pokoju do korytarza wychodzi Edward. Zaskoczony pyta, co mężczyzna robi u niego w domu? Benkowi sięga za pazuchę i wyjmuje pałkę teleskopową.\nCZOŁÓWKA\n\n2. WN. MIESZKANIE EDWARDA- KLATKA SCHODOWA. DZIEŃ 1 (14.26)\n(Adam, Olga, Roksana, Mundurowy)\nAdam i Olga przyjeżdżają na miejsce zdarzenia. Na klatce schodowej czeka na nich Roksana. Mieszkanie Edwarda jest odgrodzone taśmą policyjną. Ofiara to Edward Kawczyński - emerytowany nauczyciel mieszkający tu od wielu lat. Roksana daje detektywom znać, że Magda pracuje w mieszkaniu.\n\n3. WN. MIESZKANIE EDWARDA- KORYTARZ. DZIEŃ 1 (KONTYNUACJA, 14.26)\n(Adam, Olga, Magda, Roksana, Technik)\nAdam i Olga wchodzą do mieszkania. Na podłodze znajdują się ślady krwi oznaczone markerem. Z pokoju wychodzi do nich Magda. Detektywi zlecają Roksanie, żeby poprosiła Żanetę o sprawdzenie, czy w ostatnim czasie nie dochodziło do podobnych zdarzeń.\n\n4. PL. MIESZKANIE EDWARDA - PRZED BLOKIEM. DZIEŃ 1 (CHWILĘ PÓŹNIEJ, 14.59)\n(Adam, Olga, Sąsiadka Edwarda)\nAdam i Olga rozmawiają z roztrzęsioną Sąsiadką Edwarda (70). Detektywi pytają ją, czy Edward mógł mieć jakichś wrogów z przeszłości. Sąsiadka uważa, że nic takiego nie mogło mieć miejsca.\n\n5. WN. NIEOZNAKOWANY RADIOWÓZ - DROGA/W RUCHU. DZIEŃ 1 (15.26)\n(Adam, Olga, Żaneta-off)\nAdam i Olga jadą radiowozem i rozmawiają o śledztwie. Rozważania detektywów przerywa telefon od Żanety. Mówi, że pogrzebała trochę po bazie i znalazła pewien ciekawy wzór.\nBREAK\nAdam pyta, czy wiadomo, kto zajmował się tamtymi sprawami. Żaneta mówi, że przekierowano ją do sierż. Ćwiklińskiego.\n\n6. PL. KOMENDA - PRZED KOMENDĄ. DZIEŃ 1 (16.06)\n(Adam, Olga, sierż. Ćwikliński)\nAdam i Olga spotykają się przed komendą z sierż. Ćwiklińskim (31). Ćwikliński od wejścia zagaduje, czemu detektywi zaczęli się tak nagle interesować zamkniętymi sprawami z ostatniego roku?\n\n7. WN.KOMENDA-RECEPCJA. DZIEŃ 1 (KONTYNUACJA, 16.06)\n(Adam, Olga, Roksana)\nAdam i Olga rozmawiają o spotkaniu z Ćwiklińskim. Do detektywów dołącza Roksana - Olga zleca jej ustawienie rozmów z emerytami.\n\n8. PL. PARKING. DZIEŃ 2 (NASTĘPNEGO DNIA, 7.34)\n(Adam, Artur)\nArtur podchodzi do opartego o radiowóz Adama. Zbijają piątkę. Wyciąga mały świstek starej gazety i pokazuje go Adamowi (PPS1). Detektyw dziękuje Arturowi za spotkanie i wsiada do radiowozu.\n\n9. WN. KOMENDA - GABINET KOMENDANTA. DZIEŃ 2 (9.01)\n(Adam, Olga, Woźniak, Roksana)\nTrwa narada u Woźniaka - Adam referuje, czego dowiedział się na spotkaniu z Arturem. Pokazuje mu wycinek ze starej gazety (PPS1). Roksana odpowiada, że właściciel firmy - Radosław Więcek był już kiedyś notowany za drobne wykroczenia.\n\n10.PL. DOM RADOSŁAWA WIĘCKA - PRZED DOMEM. DZIEŃ 2 (CHWILĘ PÓŹNIEJ, 9:26)\n(Adam, Olga, Radosław Więcek, Benek Więcek)\nDetektywi przyjeżdżają pod dom Radosława Więcka (50). Przed domem stoi jego syn Benek. Radosław Więcek wychodzi do detektywów.\n\n11. WN. KOMENDA - POKÓJ PRZESŁUCHAŃ. DZIEŃ 2 (11.10)\n(Adam, Olga, Radosław Więcek)\nDetektywi przesłuchują Radosława Więcka na komendzie.\n\n12. WN. NIEOZNAKOWANY RADIOWÓZ - PARK. DZIEŃ 2 (13.02)\n(Adam, Olga, Radosław Więcek, Krysia Górska)\nDetektywi obserwują z radiowozu spotkanie w parku.\n\n13. PL. PARK - ALEJKA. DZIEŃ 2 (KONTYNUACJA, 13.05)\n(Roksana, Radosław Więcek, Krysia Górska)\nKrysia Górska (50) spotyka się w parku z Radosławem Więckiem.\n\n14. PL. PARK - ALEJKA/PARKING. DZIEŃ 2 (CHWILĘ PÓŹNIEJ, 13.30)\n(Adam, Olga, Roksana, Krysia Górska, Syn Krysi)\nDetektywi zatrzymują Krysię Górską przy jej samochodzie. Z auta wychodzi Syn Krysi (11).\n\n15. WN. KOMENDA - POKÓJ PRZESŁUCHAŃ. DZIEŃ 2 (14.40)\n(Adam, Olga, Woźniak, Krysia Górska)\nKrysia pokazuje detektywom zdjęcie syna (PPS2), które trzyma w portfelu.\n\n16. WN. KOMENDA - KORYTARZ. DZIEŃ 2 (15.30)\n(Adam, Olga, Roksana, Krysia Górska, Syn Krysi, Mundurowy)\nNa korytarzu komendy Syn Krysi czeka na matkę. Chłopiec rysuje (PPS3).\n\n17.PL. LAS - PARKING PRZY LESIE, DZIEŃ 2 (16.51)\n(Adam, Olga, Krysia Górska, Mundurowy x4)\nW ustronnym miejscu przy lesie detektywi przygotowują Krysię do akcji.\n\n18.PL. LAS - PARKING PRZY LESIE, DZIEŃ 2 (CHWILĘ PÓŹNIEJ, 16.59)\n(Krysia Górska, Ela Nowacka, Mundurowy x4)\nKrysia idzie przez las do punktu zrzutu przy wiacie. Nagle ktoś łapie ją za ramię i odwraca - zamaskowana postać (Ela Nowacka (40)) przystawia Krysi nóż do klatki piersiowej.\nBREAK 2\nAdam w końcu podchodzi do napastnika i zdejmuje mu maskę z twarzy. To Ela Nowacka - inna pielęgniarka pracująca w firmie u Więcka.\n\n19. WN. KOMENDA - POKÓJ PRZESŁUCHAŃ/ZA LUSTREM. DZIEŃ 2 (17.30)\n(Adam, Olga, Roksana, Woźniak, Ela Nowacka)\nDetektywi przesłuchują Elę Nowacką.\n\n20. PL. DOM RADOSŁAWA WIĘCKA - PRZED DOMEM. DZIEŃ 2 (18.10)\n(Adam, Olga, Radosław Więcek-off)\nDetektywi podjeżdżają pod dom Więcka. Słyszą krzyk ze środka domu. Wchodzą do środka z bronią w pogotowiu.\n\n21.WN. DOM RADOSŁAWA WIĘCKA - SALON, DZIEŃ 2 (KONTYNUACJA, 18.12)\n(Adam, Olga, Radosław Więcek)\nW mieszkaniu w salonie detektywi spotykają zakrwawionego, słaniającego się Radosława Więcka. Detektywi wzywają karetkę do Radosława, a sami wychodzą z domu, żeby rozpocząć pościg.\n\n22.WN. NIEOZNAKOWANY RADIOWÓZ - W RUCHU, DZIEŃ 2 (CHWILĘ PÓŹNIEJ, 18.20)\n(Adam, Olga, Benek Więcek)\nAdam i Olga jadą na sygnale nieoznakowanym radiowozem za Benkiem Więckiem.\n\n23.PL. LAS - ALEJKA, DZIEŃ 2 (KONTYNUACJA, 18.20)\n(Adam, Olga, Benek Więcek)\nBenek Więcek wybiega z auta i zaczyna uciekać. Detektywi podążają za nim. Olga zgłasza przez radio, że udało im się zatrzymać podejrzanego.\n\n24.WN. MIESZKANIE EDWARDA - SALON, DZIEŃ 3 (NASTĘPNEGO DNIA,\n11.20)\n(Adam, Krysia Górska, Edward, Pielęgniarz)\nNastępnego dnia Adam zabiera Krysię Górską, żeby złożyć wizytę Edwardowi. Krysia daje Edwardowi rysunek, który jej syn namalował dla Edwarda (PPS3).\nKONIEC\n";
+
+})();
+</script>
+</body>
+</html>
