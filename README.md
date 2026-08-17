@@ -122,6 +122,71 @@ dla osób, które nie mają konta deweloperskiego.
 - **Projekt .json** — cała praca (drabinka + ręczne poprawki + ustawienia)
   do zapisania i przekazania dalej
 
+## Prywatność i poufność materiałów
+
+Drabinki i scenariusze przed emisją są materiałem poufnym, więc poniżej dokładnie,
+co się z nimi dzieje. Wszystkie poniższe stwierdzenia zostały zweryfikowane
+pomiarem ruchu sieciowego w przeglądarce, nie tylko przeglądem kodu.
+
+### Co zostaje na Twoim komputerze
+
+Aplikacja to jeden plik bez backendu. Wczytanie pliku Word, rozpakowanie go,
+parsowanie nagłówków, wszystkie wyliczenia, edycja i eksport do `.docx` dzieją
+się w całości w przeglądarce.
+
+Zmierzony ruch sieciowy przy pełnym obiegu pracy — wczytanie `.docx`, edycja
+opisów, eksport `.docx`, eksport `.txt`, zapis projektu — to **jedno zapytanie:
+pobranie samej strony**. Żadna treść drabinki nie jest nigdzie wysyłana.
+
+Aplikacja nie ładuje też niczego z zewnątrz: zero czcionek z Google, zero
+bibliotek z CDN, zero analityki, zero skryptów śledzących. Po całej sesji pracy
+w przeglądarce zostaje: **0 wpisów w localStorage, 0 w sessionStorage,
+0 ciasteczek, 0 baz IndexedDB**. Nic nie zostaje zapisane.
+
+> Adresy `schemas.openxmlformats.org` widoczne w kodzie **nie są** pobieraniem
+> czegokolwiek — to identyfikatory przestrzeni nazw wymagane wewnątrz formatu
+> `.docx`. Nigdy nie następuje pod nie żadne połączenie.
+
+### Kiedy materiał opuszcza komputer
+
+Dokładnie w jednym momencie: gdy sam klikniesz **„Uzupełnij przez API"** albo
+**„Kopiuj prompt"**. Oba przekazują modelowi **pełną treść drabinki**, razem
+z zakończeniem sprawy — nie streszczenie, nie same nagłówki.
+
+Przycisk **„Pokaż, co zostanie wysłane"** wyświetla dokładną treść przed
+wysłaniem. Warto go użyć choć raz, żeby zobaczyć skalę.
+
+Dwie drogi różnią się zasadami:
+
+| Droga | Zasady |
+|---|---|
+| **Własny klucz API** (przycisk „Uzupełnij przez API") | Anthropic nie trenuje modeli na danych z API bez wyraźnej zgody, a treść zapytań domyślnie nie jest przechowywana. Organizacje mogą dodatkowo poprosić o tryb zerowej retencji (ZDR). |
+| **Kopiuj prompt → wklejenie w Claude / ChatGPT** | Obowiązują zasady konta konsumenckiego danego dostawcy, nie warunki API. W Claude uczenie na rozmowach jest wyborem użytkownika w ustawieniach — sprawdź, jak masz to ustawione. W innych narzędziach reguły bywają inne. |
+
+Jeśli materiał jest objęty NDA, bezpieczniejsza jest droga przez własny klucz API.
+
+### Czego narzędzie nie chroni
+
+Uczciwie o granicach:
+
+- **Plik projektu `.json`** zawiera pełną drabinkę zwykłym tekstem, bez
+  szyfrowania. Traktuj go jak sam scenariusz.
+- **Wyeksportowane `.docx` / `.txt`** lądują w folderze pobierania — istotne
+  na komputerach współdzielonych.
+- **Schowek.** „Kopiuj prompt" umieszcza całą drabinkę w schowku systemowym.
+  Menedżery schowka i synchronizacja schowka między urządzeniami mogą to przechwycić.
+- **Rozszerzenia przeglądarki** z dostępem do treści stron widzą zawartość
+  każdej otwartej karty — dotyczy to dowolnej aplikacji webowej, także tej.
+- **Podmieniona kopia.** Ktoś może postawić własną, zmodyfikowaną wersję tego
+  pliku pod innym adresem. Rozsyłaj ekipie wyłącznie oficjalny adres.
+
+### Zalecenie dla zespołu
+
+Do pracy na materiale przed emisją: używaj trybu offline (bez klikania przycisków
+AI) albo własnego klucza API. Opisy postaci, których nie uzupełni model, i tak
+zwykle szybciej wpisuje się ręcznie, niż poprawia po modelu — a numeracja,
+lokacje i zliczenia, czyli najbardziej pracochłonna część, liczą się bez udziału AI.
+
 ## Publikacja online
 
 Narzędzie to jeden plik statyczny bez kroku budowania, więc zadziała na każdym

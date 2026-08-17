@@ -151,11 +151,22 @@ summary:hover{color:var(--txt)}
     <p class="hint">Numery scen, lokacje i przypisania postaci są już policzone z nagłówków — AI ich nie dotyka.
       Model dopisuje tylko to, czego nie da się wyliczyć: opisy postaci, wiek tam gdzie go brak, treść PPS-ów,
       pojazdy i notatki do lokacji.</p>
+    <div class="msg warn" style="margin-bottom:14px">
+      <b>Uwaga — to jedyny moment, w którym drabinka opuszcza Twój komputer.</b><br>
+      Oba przyciski poniżej wysyłają <b>pełną treść drabinki</b>, razem z zakończeniem sprawy.
+      Bez ich kliknięcia aplikacja nie wykonuje żadnego połączenia z siecią. Zanim wyślesz,
+      sprawdź przyciskiem obok, co dokładnie pójdzie dalej.
+    </div>
     <div class="row">
       <button class="btn" id="btnAI">Uzupełnij przez API</button>
       <button class="btn sec" id="btnPrompt">Kopiuj prompt (tryb bez klucza API)</button>
       <button class="btn sec" id="btnPasteJSON">Wklej odpowiedź AI</button>
+      <button class="btn sec" id="btnShowPrompt">Pokaż, co zostanie wysłane</button>
       <span id="aiStatus" class="sub"></span>
+    </div>
+    <div id="promptBox" style="display:none;margin-top:12px">
+      <label>Dokładna treść, która zostanie przekazana modelowi — <span id="promptLen"></span></label>
+      <textarea id="promptPreview" rows="12" class="mono" readonly></textarea>
     </div>
     <div id="pasteBox" style="display:none;margin-top:12px">
       <label>Wklej tu JSON zwrócony przez Claude / ChatGPT</label>
@@ -1801,6 +1812,15 @@ $('#btnPrompt').addEventListener('click', function(){
 });
 $('#btnPasteJSON').addEventListener('click', function(){
   var b = $('#pasteBox'); b.style.display = b.style.display==='none' ? 'block' : 'none';
+});
+$('#btnShowPrompt').addEventListener('click', function(){
+  if (!state.model) return toast('#t2','err','Najpierw przeanalizuj drabinkę.');
+  var box = $('#promptBox');
+  if (box.style.display !== 'none'){ box.style.display = 'none'; return; }
+  var t = aiPrompt();
+  $('#promptPreview').value = t;
+  $('#promptLen').textContent = t.length.toLocaleString('pl-PL') + ' znaków, w tym cała drabinka';
+  box.style.display = 'block';
 });
 $('#btnApplyJSON').addEventListener('click', function(){
   try { applyAI(extractJSON($('#aiJSON').value)); toast('#t2','ok','Zastosowano.'); }
