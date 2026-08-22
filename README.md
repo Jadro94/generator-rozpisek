@@ -98,6 +98,31 @@ Gdy numeracja miałaby się nie zgadzać (bo np. nie zaczyna się od 1),
 zaznacz w Wordzie całość, skopiuj i wklej tekst wprost do aplikacji — wtedy
 numery przeniosą się jako zwykły tekst i nic nie trzeba odtwarzać.
 
+## Co można poprawić w zakładce 2
+
+Zakładka „Rozpiska" to miejsce na korektę tego, co aplikacja odczytała.
+Każda zmiana natychmiast przelicza całą rozpiskę.
+
+- **Numery scen** — osobna karta na górze zakładki. Numer każdej sceny można
+  nadpisać, także na numer z literą (`8A`). Obok numeru widać lokację, porę dnia
+  i obsadę sceny, więc wiadomo, co się poprawia. Sceny ponumerowane automatycznie
+  są oznaczone. Przycisk **Przenumeruj kolejno od 1** nadaje numery od nowa,
+  **Przywróć numery z drabinki** cofa wszystkie ręczne zmiany. Powtórzony numer
+  jest podświetlany na czerwono wraz z ostrzeżeniem.
+- **Przynależność postaci** — przyciski `→ epizody` / `→ statyści` / `→ castingowa`
+  przenoszą postać między sekcjami; strzałki ↑↓ ustawiają kolejność postaci stałych.
+- **Nazwy, wiek i opisy** — wszystko edytowalne wprost w polach.
+- **Lokacje** — nazwa, notatka realizacyjna, przełącznik `stała` / płatna,
+  nazwy sublokacji (identyczne nazwy scalają się w jedną pozycję).
+- **PPS i pojazdy** — nazwa, dzień, opis; pojazdy dodaje się i usuwa ręcznie.
+
+Ręcznie poprawione numery scen zapisują się w pliku projektu razem z resztą zmian.
+
+## Nawigacja
+
+U dołu każdej zakładki są przyciski **← Wstecz** i **Dalej →** prowadzące przez
+kolejne kroki: drabinka → rozpiska → podgląd i eksport → streszczenie → ustawienia.
+
 ## Konfiguracja pod własny serial
 
 Zakładka **Ustawienia** pozwala dostosować narzędzie bez ruszania kodu:
@@ -127,7 +152,8 @@ dla osób, które nie mają konta deweloperskiego.
 ## Eksport
 
 - **Kopiuj do schowka** — sformatowany tekst z punktorami, gotowy do wklejenia
-- **.docx** — dokument Word budowany w przeglądarce, bez żadnych bibliotek
+- **.docx** — dokument Word budowany w przeglądarce, bez żadnych bibliotek; podgląd
+  na ekranie i gotowy dokument są w tym samym kroju pisma (Arial)
 - **.txt** — czysty tekst
 - **Projekt .json** — cała praca (drabinka + ręczne poprawki + ustawienia)
   do zapisania i przekazania dalej
