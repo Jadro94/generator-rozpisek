@@ -428,7 +428,13 @@ var DEFAULT_REGULARS = [
   { name: 'Magda',            aliases: ['Magda'] },
   { name: 'Artur',            aliases: ['Artur'] },
   { name: 'Ewelina',          aliases: ['Ewelina'] },
-  { name: 'Antek',            aliases: ['Antek'] }
+  { name: 'Antek',            aliases: ['Antek'] },
+  { name: 'Darek',            aliases: ['Darek', 'Dariusz'] },
+  { name: 'Szwarc',           aliases: ['Szwarc'] },
+  { name: 'Bartek',           aliases: ['Bartek', 'Bartosz'] },
+  { name: 'Łucja',            aliases: ['Łucja', 'Lucja'] },
+  { name: 'Maciek',           aliases: ['Maciek', 'Maciej'] },
+  { name: 'Wiktor',           aliases: ['Wiktor'] }
 ];
 
 // Postacie tła — jeśli nazwa postaci pasuje do jednego z tych wzorców,
@@ -929,8 +935,10 @@ function renderDoc(model, options) {
     bulletL2: '○ '
   }, options || {});
 
-  var B = [];   // bloki: {style, text}
-  function p(style, text) { B.push({ style: style, text: text }); }
+  var B = [];   // bloki: {style, text, num}
+  // num — numer pozycji na liście numerowanej („1.”); brak = punktor
+  function p(style, text, num) { B.push({ style: style, text: text, num: num || null }); }
+  function counter() { var i = 0; return function () { return (++i) + '.'; }; }
 
   if (o.headerTitle && (model.meta.title || model.meta.episode)) {
     var h = '';
@@ -945,52 +953,64 @@ function renderDoc(model, options) {
   }
 
   p('h', 'Lista castingowa:');
+  var nrReg = counter();
   model.regulars.forEach(function (r) {
     var scenesTxt = fmtSceneList(r.scenes);
-    p('li1', r.display + ' – ' + (o.showCounts ? r.scenes.length + ' ' : '') + '(' + scenesTxt + ')');
+    p('li1', r.display + ' – ' + (o.showCounts ? r.scenes.length + ' ' : '') + '(' + scenesTxt + ')', nrReg());
   });
 
   p('spacer', '');
   p('h', 'Pozostali odtwórcy:');
+  var nrEpi = counter();
   model.episodics.forEach(function (e) {
     var head = e.display + (e.age ? ' (' + e.age + ')' : '');
     var desc = e.desc ? ' – ' + e.desc.trim().replace(/\.$/, '') + '.' : '';
-    p('li1', head + desc + ' (' + fmtSceneList(e.scenes) + ')');
+    p('li1', head + desc + ' (' + fmtSceneList(e.scenes) + ')', nrEpi());
   });
 
   p('spacer', '');
   p('h', 'Statyści:');
+  var nrExt = counter();
   model.extras.forEach(function (e) {
     var head = e.display + (e.age ? ' (' + e.age + ')' : '');
     var desc = e.desc ? ' – ' + e.desc.trim().replace(/\.$/, '') : '';
-    p('li1', head + desc + ' (' + fmtSceneList(e.scenes) + ')');
+    p('li1', head + desc + ' (' + fmtSceneList(e.scenes) + ')', nrExt());
   });
 
   p('spacer', '');
   p('h', 'Lista lokacji:');
   if (model.fixedLocations.length) {
     p('h2', 'Lokacje stałe:');
-    model.fixedLocations.forEach(function (L) { renderLoc(L); });
+    var nrFix = counter();
+    model.fixedLocations.forEach(function (L) { renderLoc(L, nrFix()); });
   }
   if (model.paidLocations.length) {
     p('h2', 'Lokacje:');
-    model.paidLocations.forEach(function (L) { renderLoc(L); });
+    var nrPaid = counter();
+    model.paidLocations.forEach(function (L) { renderLoc(L, nrPaid()); });
   }
 
-  function renderLoc(L) {
+  function renderLoc(L, nr) {
     var dn = [];
     if (L.dayCount) dn.push(plScen(L.dayCount) + ' dzień');
     if (L.nightCount) dn.push(plScen(L.nightCount) + ' noc');
-    var all = L.scenes.map(function (s) { return s.n; });
-    var onlyMain = L.subList.length === 1 && !L.subList[0].name;
-    p('li1', L.name + ' – ' + dn.join(', ') + ' (' + all.join(', ') + ')');
+
+    var named = L.subList.filter(function (S) { return !!S.name; });
+    var loose = L.subList.filter(function (S) { return !S.name; });   // sceny bez sublokacji
+
+    // Numery scen podajemy przy sublokacjach. Przy samej lokacji tylko wtedy,
+    // gdy nie ma sublokacji — albo dla scen, które do żadnej nie należą,
+    // bo inaczej zniknęłyby z rozpiski bez śladu.
+    var przyLokacji = named.length
+      ? loose.reduce(function (a, S) { return a.concat(S.scenes); }, [])
+      : L.scenes.map(function (s) { return s.n; });
+
+    p('li1', L.name + ' – ' + dn.join(', ') +
+        (przyLokacji.length ? ' (' + sortScenes(uniq(przyLokacji)).join(', ') + ')' : ''), nr);
     if (L.note) p('note', L.note);
-    if (!onlyMain) {
-      L.subList.forEach(function (S) {
-        if (!S.name) return;
-        p('li2', S.name + ' (' + S.scenes.join(', ') + ')');
-      });
-    }
+    named.forEach(function (S) {
+      p('li2', S.name + ' (' + S.scenes.join(', ') + ')');
+    });
   }
 
   if (model.pps.length) {
@@ -1032,7 +1052,7 @@ function blocksToText(blocks, o) {
       case 'title': return b.text;
       case 'h': return b.text;
       case 'h2': return b.text;
-      case 'li1': return b1 + b.text;
+      case 'li1': return (b.num ? b.num + ' ' : b1) + b.text;
       case 'li2': return '    ' + b2 + b.text;
       case 'note': return '    ' + b.text;
       case 'spacer': return '';
@@ -1680,7 +1700,7 @@ function renderPreview(){
       case 'title': return '<div class="pt">'+esc(x.text)+'</div>';
       case 'h':     return '<div class="ph">'+esc(x.text)+'</div>';
       case 'h2':    return '<div class="ph2">'+esc(x.text)+'</div>';
-      case 'li1':   return '<div class="l1">● '+esc(x.text)+'</div>';
+      case 'li1':   return '<div class="l1">'+(x.num ? esc(x.num)+' ' : '● ')+esc(x.text)+'</div>';
       case 'li2':   return '<div class="l2">○ '+esc(x.text)+'</div>';
       case 'note':  return '<div class="nt">'+esc(x.text)+'</div>';
       default:      return '<div class="sp"></div>';
@@ -1743,7 +1763,7 @@ function blocksToDocxBody(blocks){
       case 'title': return wPara(b.text, {b:true, sz:28, after:140});
       case 'h':     return wPara(b.text, {b:true, sz:24, before:180, after:60});
       case 'h2':    return wPara(b.text, {b:true, sz:22, before:100, after:40});
-      case 'li1':   return wPara('● '+b.text, {ind:360, hang:220, after:20});
+      case 'li1':   return wPara((b.num ? b.num+' ' : '● ')+b.text, {ind:360, hang:220, after:20});
       case 'li2':   return wPara('○ '+b.text, {ind:900, hang:220, after:20});
       case 'note':  return wPara(b.text, {ind:640, i:true, after:20});
       default:      return wPara('', {sz:14});

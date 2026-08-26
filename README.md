@@ -149,6 +149,18 @@ Każdą pozycję można też przenieść ręcznie przyciskami `→ epizody` / `�
 Drugi tryb nie wymaga niczego poza przeglądarką — to sensowny domyślny wybór
 dla osób, które nie mają konta deweloperskiego.
 
+## Format gotowej rozpiski
+
+- **Lista castingowa, Pozostali odtwórcy, Statyści** — listy numerowane,
+  każda liczona od 1.
+- **Lokacje** — numerowane, osobno w sekcji „Lokacje stałe" i „Lokacje".
+- **Sublokacje** — punktory `○`, wcięte pod swoją lokacją.
+- **Numery scen** podawane są przy sublokacjach, a nie przy lokacji, żeby nie
+  dublować tej samej informacji dwa razy. Wyjątek: lokacja bez sublokacji
+  (wtedy numery stoją przy niej) oraz sceny, które do żadnej sublokacji nie
+  należą — te też zostają przy lokacji, bo inaczej zniknęłyby bez śladu.
+- **PPS, pojazdy i podsumowanie** — bez zmian, punktory `●`.
+
 ## Eksport
 
 - **Kopiuj do schowka** — sformatowany tekst z punktorami, gotowy do wklejenia
