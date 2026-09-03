@@ -40,6 +40,15 @@ To jeden plik HTML bez zależności i bez backendu.
 Jedyna funkcja, która wymaga połączenia z siecią, to przycisk „Uzupełnij przez
 API”. Tryb „Kopiuj prompt” działa zawsze — również przy pracy offline.
 
+## Strona startowa
+
+Aplikacja otwiera się ekranem powitalnym z logo, krótkim opisem i pięcioma krokami
+„Jak to działa?". Przycisk **START** przechodzi do zakładki „Drabinka" i ustawia
+kursor w polu tekstowym. Kliknięcie logo w nagłówku wraca na stronę startową.
+
+Logo jest osadzone w pliku HTML, więc narzędzie nadal jest jednym plikiem bez
+zewnętrznych zasobów i działa bez internetu.
+
 ## Rozpoznawany format drabinki
 
 ```
