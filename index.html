@@ -158,7 +158,6 @@ summary:hover{color:var(--txt)}
     <textarea id="src" rows="16" class="mono" placeholder="Wklej tutaj treść drabinki…"></textarea>
     <div class="row mt">
       <button class="btn" id="btnParse">Analizuj drabinkę</button>
-      <button class="btn sec" id="btnSample">Wczytaj przykład</button>
       <button class="btn sec" id="btnClear">Wyczyść</button>
     </div>
   </div>
@@ -434,7 +433,8 @@ var DEFAULT_REGULARS = [
   { name: 'Bartek',           aliases: ['Bartek', 'Bartosz'] },
   { name: 'Łucja',            aliases: ['Łucja', 'Lucja'] },
   { name: 'Maciek',           aliases: ['Maciek', 'Maciej'] },
-  { name: 'Wiktor',           aliases: ['Wiktor'] }
+  { name: 'Wiktor',           aliases: ['Wiktor'] },
+  { name: 'Jan',              aliases: ['Jan', 'Janek', 'Janko'] }
 ];
 
 // Postacie tła — jeśli nazwa postaci pasuje do jednego z tych wzorców,
@@ -633,7 +633,11 @@ function parseWith(rawText, opts) {
     }
 
     locPart = locPart.replace(/^[\s.,;:\-–—]+/, '').replace(/[\s.,;:\-–—]+$/, '');
-    var lm = locPart.match(/^(.*?)\s*[-–—]\s*(.+)$/);
+    // Rozdzielamy lokację od sublokacji. Priorytet ma myślnik, bo to zapis
+    // najczęstszy. Gdy myślnika nie ma, próbujemy ukośnika — scenarzyści piszą
+    // też „NIEOZNAKOWANY RADIOWÓZ/BOCZNA ULICZKA”. Ukośnik wewnątrz sublokacji
+    // („DROGA/W RUCHU”) jest bezpieczny, bo tam myślnik już zadziałał.
+    var lm = locPart.match(/^(.*?)\s*[-–—]\s*(.+)$/) || locPart.match(/^([^\/]+?)\s*\/\s*(.+)$/);
     if (lm) { scene.location = lm[1].trim(); scene.subLocation = lm[2].trim(); }
     else { scene.location = locPart.trim(); scene.subLocation = ''; }
 
@@ -724,6 +728,39 @@ function classify(name, cfg) {
     if (core.indexOf(norm(cfg.extraWords[k])) > -1) return { kind: 'extra', canonical: name };
   }
   return { kind: 'episodic', canonical: name };
+}
+
+/* Skleja warianty zapisu tej samej lokacji w jedną pozycję.
+   „NIEOZNAKOWANY RADIOWÓZ W RUCHU”, „NIEOZNAKOWANY RADIOWÓZ/BOCZNA ULICZKA”
+   i „NIEOZNAKOWANY RADIOWÓZ” to dla produkcji jedna lokacja — to, co zostaje
+   po nazwie kanonicznej, jest sublokacją. Nazwy kanoniczne bierzemy z listy
+   lokacji stałych (zakładka Ustawienia), więc użytkownik steruje tym sam. */
+function canonicalLocation(location, subLocation, cfg) {
+  var words = String(location || '').trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return { location: location, subLocation: subLocation };
+
+  // najdłuższe nazwy najpierw, żeby „nieoznakowany radiowóz” wygrał z „radiowóz”
+  var cands = (cfg.fixedLocations || []).slice().sort(function (a, b) {
+    return norm(b).split(' ').length - norm(a).split(' ').length;
+  });
+
+  for (var i = 0; i < cands.length; i++) {
+    var cw = norm(cands[i]).split(' ').filter(Boolean);
+    if (!cw.length || cw.length > words.length) continue;
+    var hit = true;
+    for (var j = 0; j < cw.length; j++) {
+      if (norm(words[j]) !== cw[j]) { hit = false; break; }
+    }
+    if (!hit) continue;
+    if (cw.length === words.length) return { location: location, subLocation: subLocation };
+
+    // reszta nazwy staje się sublokacją (przed ewentualną już istniejącą)
+    var reszta = words.slice(cw.length).join(' ').replace(/^[\s\/,;:.\-–—]+/, '').trim();
+    var sub = subLocation || '';
+    if (reszta) sub = sub ? reszta + ' / ' + sub : reszta;
+    return { location: words.slice(0, cw.length).join(' '), subLocation: sub };
+  }
+  return { location: location, subLocation: subLocation };
 }
 
 function isFixedLocation(locName, cfg) {
@@ -830,6 +867,10 @@ function buildModel(parsed, cfg) {
   /* ------- lokacje ------- */
   var locs = {};
   scenes.forEach(function (sc) {
+    // kanonizacja jest idempotentna, więc zapisujemy wynik na scenie —
+    // dzięki temu edytor scen pokazuje dokładnie to, co trafia do rozpiski
+    var kan = canonicalLocation(sc.location, sc.subLocation, cfg);
+    sc.location = kan.location; sc.subLocation = kan.subLocation;
     var lk = norm(sc.location);
     if (!lk) return;
     if (!locs[lk]) locs[lk] = { key: lk, name: tidyName(sc.location, properSet), scenes: [], subs: {}, fixed: isFixedLocation(sc.location, cfg), note: '' };
@@ -1126,6 +1167,7 @@ var state = {
   parsed: null,
   model: null,
   cfg: null,
+  deleted: { people:{}, locs:{}, subs:{}, pps:{} },
   api: { key:'', model:'claude-sonnet-4-5' }
 };
 
@@ -1340,7 +1382,6 @@ function fdxToText(xml){
 }
 
 $('#btnClear').addEventListener('click', function(){ $('#src').value=''; $('#parseOut').innerHTML=''; });
-$('#btnSample').addEventListener('click', function(){ $('#src').value = SAMPLE; doParse(); });
 $('#btnParse').addEventListener('click', doParse);
 
 /* ------------------------------------------------------------- parsowanie */
@@ -1364,6 +1405,7 @@ function rebuild(keepEdits){
   var edits = keepEdits ? snapshotEdits() : null;
   state.model = RPE.buildModel(state.parsed, state.cfg);
   if (edits) restoreEdits(edits);
+  applyDeletions(state.model);
   renderEditors();
 }
 function snapshotEdits(){
@@ -1517,6 +1559,45 @@ $('#btnRevertNumbers').addEventListener('click', function(){
   toast('#t2','ok','Przywrócono numerację odczytaną z drabinki.');
 });
 
+/* ---- ręczna edycja list scen -------------------------------------------- */
+function normSceneNo(t){ return String(t||'').replace(/[\s\-\/]+/g,'').toUpperCase(); }
+function parseSceneField(v){
+  return String(v||'').split(',').map(function(t){
+    t = t.trim(); if (!t) return null;
+    var off = /\(\s*off\s*\)/i.test(t);
+    var n = normSceneNo(t.replace(/\(\s*off\s*\)/ig,''));
+    return n ? { n:n, off:off } : null;
+  }).filter(Boolean).sort(function(a,b){ return RPE.cmpScene(a.n,b.n); });
+}
+function sceneDayPart(n){
+  var sc = (state.parsed && state.parsed.scenes || []).filter(function(s){ return s.number === n; })[0];
+  return sc ? sc.dayPart : 'DZIEŃ';
+}
+/* Po ręcznej zmianie listy scen przy lokacji przeliczamy dzień/noc z drabinki. */
+function setLocScenes(L, v){
+  L.scenes = String(v||'').split(',').map(function(t){ return normSceneNo(t); })
+    .filter(Boolean).map(function(n){ return { n:n, dayPart: sceneDayPart(n) }; })
+    .sort(function(a,b){ return RPE.cmpScene(a.n,b.n); });
+  var d=0, nn=0;
+  L.scenes.forEach(function(s){ if (/^NOC|ZMIERZCH/.test(s.dayPart)) nn++; else d++; });
+  L.dayCount = d; L.nightCount = nn;
+}
+/* Usunięte pozycje trzymamy poza modelem, żeby nie wracały przy każdym
+   przeliczeniu rozpiski (zmiana numeru sceny, ustawień, wczytanie projektu). */
+function applyDeletions(m){
+  var D = state.deleted;
+  ['regulars','episodics','extras'].forEach(function(b){
+    m[b] = m[b].filter(function(x){ return !D.people[x.key]; });
+  });
+  ['fixedLocations','paidLocations'].forEach(function(b){
+    m[b] = m[b].filter(function(L){ return !D.locs[L.key]; });
+    m[b].forEach(function(L){
+      L.subList = L.subList.filter(function(S){ return !D.subs[L.key+'|'+RPE.norm(S.name)]; });
+    });
+  });
+  m.pps = m.pps.filter(function(x){ return !D.pps[x.id]; });
+}
+
 function sceneChips(p){
   return p.scenes.map(function(s){ return s.n + (s.off ? ' (off)' : ''); }).join(', ');
 }
@@ -1531,6 +1612,7 @@ function renderPeople(sel, arr, kind){
     if (kind !== 'regular') moves += '<button class="ghost" data-act="toRegular">→ castingowa</button>';
     if (kind !== 'episodic') moves += '<button class="ghost" data-act="toEpisodic">→ epizody</button>';
     if (kind !== 'extra')    moves += '<button class="ghost" data-act="toExtra">→ statyści</button>';
+    moves += '<button class="ghost" data-act="del" title="Usuń pozycję z rozpiski">usuń</button>';
     d.innerHTML =
       '<div class="top">' +
         '<input class="nm" type="text" value="'+esc(p.display)+'">' +
@@ -1540,15 +1622,29 @@ function renderPeople(sel, arr, kind){
       '</div>' +
       (kind==='regular' ? '' :
         '<textarea rows="2" placeholder="Krótki opis wyglądu i charakteru postaci…">'+esc(p.desc)+'</textarea>') +
-      '<div class="sc">sceny: '+esc(sceneChips(p))+'</div>';
+      '<div class="row" style="margin-top:8px;flex-wrap:nowrap">' +
+        '<label style="margin:0;min-width:50px">Sceny</label>' +
+        '<input class="scn-f" type="text" style="flex:1" value="'+esc(sceneChips(p))+'" ' +
+          'title="Numery scen po przecinku; dopisz (off) dla sceny głosowej">' +
+      '</div>';
     host.appendChild(d);
 
     d.querySelector('.nm').addEventListener('input', function(){ p.display = this.value; });
     var ageEl = d.querySelector('.age'); if (ageEl) ageEl.addEventListener('input', function(){ p.age = this.value; });
     var ta = d.querySelector('textarea'); if (ta) ta.addEventListener('input', function(){ p.desc = this.value; });
+    d.querySelector('.scn-f').addEventListener('change', function(){
+      p.scenes = parseSceneField(this.value);
+      renderEditors(); renderPreview();
+    });
     d.querySelectorAll('[data-act]').forEach(function(b){
       b.addEventListener('click', function(){
         var a = b.dataset.act;
+        if (a === 'del'){
+          state.deleted.people[p.key] = true;
+          var k = arr.indexOf(p); if (k > -1) arr.splice(k, 1);
+          renderEditors(); renderPreview();
+          return;
+        }
         if (a === 'up' || a === 'down'){
           var j = a==='up' ? i-1 : i+1;
           if (j>=0 && j<arr.length){ var t=arr[i]; arr[i]=arr[j]; arr[j]=t; renderEditors(); }
@@ -1590,13 +1686,20 @@ function renderLocations(){
         '<input class="nm" type="text" value="'+esc(L.name)+'">' +
         '<label style="margin:0;display:flex;align-items:center;gap:6px;color:var(--dim);font-size:12.5px">' +
           '<input type="checkbox" class="fx" style="width:auto"'+(L.fixed?' checked':'')+'> stała</label>' +
+        '<button class="ghost" data-del-loc="1" title="Usuń lokację z rozpiski">usuń</button>' +
       '</div>' +
       '<input class="note" type="text" style="margin-top:8px" placeholder="Notatka realizacyjna (opcjonalnie)" value="'+esc(L.note||'')+'">' +
-      '<div class="sc">'+esc(dn.join(', '))+' — sceny: '+esc(L.scenes.map(function(s){return s.n;}).join(', '))+'</div>' +
+      '<div class="row" style="margin-top:8px;flex-wrap:nowrap">' +
+        '<label style="margin:0;min-width:50px">Sceny</label>' +
+        '<input class="loc-scn" type="text" style="flex:1" value="'+esc(L.scenes.map(function(s){return s.n;}).join(', '))+'" ' +
+          'title="Wszystkie sceny w tej lokacji — z tego liczy się dzień/noc">' +
+        '<span class="sc" style="margin:0;white-space:nowrap">'+esc(dn.join(', '))+'</span>' +
+      '</div>' +
       '<div class="subs">' + L.subList.map(function(S,i){
         if (!S.name && L.subList.length===1) return '';
         return '<div class="sub-row"><input type="text" data-i="'+i+'" value="'+esc(S.name)+'">' +
-               '<span class="sc">('+esc(S.scenes.join(', '))+')</span></div>';
+               '<input class="sub-scn" type="text" data-i="'+i+'" style="width:150px" value="'+esc(S.scenes.join(', '))+'" title="Numery scen tej sublokacji">' +
+               '<button class="ghost" data-del-sub="'+i+'" title="Usuń sublokację">usuń</button></div>';
       }).join('') + '</div>';
     host.appendChild(d);
 
@@ -1611,7 +1714,34 @@ function renderLocations(){
       to.sort(function(a,b){ return RPE.cmpScene(a.scenes[0].n, b.scenes[0].n); });
       renderLocations();
     });
-    d.querySelectorAll('.subs input').forEach(function(inp){
+    d.querySelector('[data-del-loc]').addEventListener('click', function(){
+      state.deleted.locs[L.key] = true;
+      [m.fixedLocations, m.paidLocations].forEach(function(b){
+        var i = b.indexOf(L); if (i>-1) b.splice(i,1);
+      });
+      renderLocations(); renderPreview();
+    });
+    d.querySelector('.loc-scn').addEventListener('change', function(){
+      setLocScenes(L, this.value);
+      renderLocations(); renderPreview();
+    });
+    d.querySelectorAll('.sub-scn').forEach(function(inp){
+      inp.addEventListener('change', function(){
+        var S = L.subList[+inp.dataset.i]; if (!S) return;
+        S.scenes = RPE.sortScenes(String(inp.value||'').split(',')
+          .map(function(t){ return normSceneNo(t); }).filter(Boolean));
+        renderLocations(); renderPreview();
+      });
+    });
+    d.querySelectorAll('[data-del-sub]').forEach(function(b){
+      b.addEventListener('click', function(){
+        var S = L.subList[+b.dataset.delSub]; if (!S) return;
+        state.deleted.subs[L.key+'|'+RPE.norm(S.name)] = true;
+        L.subList.splice(+b.dataset.delSub, 1);
+        renderLocations(); renderPreview();
+      });
+    });
+    d.querySelectorAll('.subs .sub-row > input[type=text]:first-child').forEach(function(inp){
       inp.addEventListener('input', function(){
         var S = L.subList[+inp.dataset.i]; if (!S) return;
         S.name = inp.value;
@@ -1635,13 +1765,19 @@ function renderPPS(){
     d.innerHTML =
       '<div class="top"><b style="min-width:56px">'+esc(x.id)+'</b>' +
         '<input class="ti" type="text" style="flex:1" placeholder="Nazwa, np. wycinek z gazety Artura" value="'+esc(x.title)+'">' +
-        '<input class="dy" type="text" style="width:110px" placeholder="Dzień 0" value="'+esc(x.day)+'"></div>' +
+        '<input class="dy" type="text" style="width:110px" placeholder="Dzień 0" value="'+esc(x.day)+'">' +
+        '<button class="ghost" data-del-pps="1" title="Usuń PPS">usuń</button></div>' +
       '<textarea class="ds" rows="2" placeholder="Opis: co widać / co słychać na materiale…">'+esc(x.desc)+'</textarea>' +
       '<div class="sc">sceny: '+esc(x.scenes.join(', '))+'</div>';
     host.appendChild(d);
     d.querySelector('.ti').addEventListener('input', function(){ x.title = this.value; });
     d.querySelector('.dy').addEventListener('input', function(){ x.day = this.value; });
     d.querySelector('.ds').addEventListener('input', function(){ x.desc = this.value; });
+    d.querySelector('[data-del-pps]').addEventListener('click', function(){
+      state.deleted.pps[x.id] = true;
+      var i = m.pps.indexOf(x); if (i>-1) m.pps.splice(i,1);
+      renderPPS(); renderPreview();
+    });
   });
 }
 $('#btnAddPPS').addEventListener('click', function(){
@@ -2108,6 +2244,7 @@ $('#btnSaveProj').addEventListener('click', function(){
     cfg: readCfgUI(),
     meta: { title:$('#mTitle').value, ep:$('#mEp').value, epg:$('#mEpG').value, pair:$('#mPair').value },
     summary: $('#sumText').value,
+    deleted: state.deleted,
     sceneNumbers: state.parsed ? state.parsed.scenes.map(function(sc){
       return { n: sc.number, a: !!sc.autoNumbered };
     }) : [],
@@ -2127,6 +2264,7 @@ $('#projFile').addEventListener('change', function(){
       var p = JSON.parse(String(r.result));
       $('#src').value = p.src || '';
       if (p.cfg){ state.cfg = p.cfg; loadCfgUI(state.cfg); }
+      state.deleted = p.deleted || { people:{}, locs:{}, subs:{}, pps:{} };
       state.src = $('#src').value;
       state.parsed = RPE.parseDrabinka(state.src);
       state.parsed.scenes.forEach(function(sc){ sc.origNumber = sc.number; sc.origAuto = sc.autoNumbered; });
@@ -2138,6 +2276,7 @@ $('#projFile').addEventListener('change', function(){
       }
       state.model = RPE.buildModel(state.parsed, state.cfg);
       if (p.edits) restoreEdits(p.edits);
+      applyDeletions(state.model);
       if (p.vehicles) state.model.vehicles = p.vehicles;
       if (p.pps && p.pps.length) state.model.pps = p.pps;
       if (p.meta){ $('#mTitle').value=p.meta.title||''; $('#mEp').value=p.meta.ep||'';
@@ -2177,8 +2316,6 @@ $('#projFile').addEventListener('change', function(){
   });
 })();
 
-/* ------------------------------------------------------------- przykład */
-var SAMPLE = "GLINIARZE21- drabinka odc.59(1274)\nDOMY NIESPOKOJNEJ STAROŚCI (para Adam - Olga)\n\n1. WN. MIESZKANIE EDWARDA- KORYTARZ. DZIEŃ 1 (11.24)\n(Benek Więcek, Edward)\nW mieszkaniu emerytowanego Edwarda(70) słychać dźwięk otwierającego się zamka w drzwiach. Drzwi do mieszkania otwierają się, do środka wchodzi zamaskowany mężczyzna (Benek Więcek(25)). Zamyka za sobą drzwi i od razu sięga do stojącej w korytarzu szafki. Chwilę ją przeszukuje, ale w końcu znajduje pudełko (skarbonkę), z której wyciąga kilka banknotów i naszyjnik. Zadowolony mężczyzna uśmiecha się do siebie. Nagle z pokoju do korytarza wychodzi Edward. Zaskoczony pyta, co mężczyzna robi u niego w domu? Benkowi sięga za pazuchę i wyjmuje pałkę teleskopową.\nCZOŁÓWKA\n\n2. WN. MIESZKANIE EDWARDA- KLATKA SCHODOWA. DZIEŃ 1 (14.26)\n(Adam, Olga, Roksana, Mundurowy)\nAdam i Olga przyjeżdżają na miejsce zdarzenia. Na klatce schodowej czeka na nich Roksana. Mieszkanie Edwarda jest odgrodzone taśmą policyjną. Ofiara to Edward Kawczyński - emerytowany nauczyciel mieszkający tu od wielu lat. Roksana daje detektywom znać, że Magda pracuje w mieszkaniu.\n\n3. WN. MIESZKANIE EDWARDA- KORYTARZ. DZIEŃ 1 (KONTYNUACJA, 14.26)\n(Adam, Olga, Magda, Roksana, Technik)\nAdam i Olga wchodzą do mieszkania. Na podłodze znajdują się ślady krwi oznaczone markerem. Z pokoju wychodzi do nich Magda. Detektywi zlecają Roksanie, żeby poprosiła Żanetę o sprawdzenie, czy w ostatnim czasie nie dochodziło do podobnych zdarzeń.\n\n4. PL. MIESZKANIE EDWARDA - PRZED BLOKIEM. DZIEŃ 1 (CHWILĘ PÓŹNIEJ, 14.59)\n(Adam, Olga, Sąsiadka Edwarda)\nAdam i Olga rozmawiają z roztrzęsioną Sąsiadką Edwarda (70). Detektywi pytają ją, czy Edward mógł mieć jakichś wrogów z przeszłości. Sąsiadka uważa, że nic takiego nie mogło mieć miejsca.\n\n5. WN. NIEOZNAKOWANY RADIOWÓZ - DROGA/W RUCHU. DZIEŃ 1 (15.26)\n(Adam, Olga, Żaneta-off)\nAdam i Olga jadą radiowozem i rozmawiają o śledztwie. Rozważania detektywów przerywa telefon od Żanety. Mówi, że pogrzebała trochę po bazie i znalazła pewien ciekawy wzór.\nBREAK\nAdam pyta, czy wiadomo, kto zajmował się tamtymi sprawami. Żaneta mówi, że przekierowano ją do sierż. Ćwiklińskiego.\n\n6. PL. KOMENDA - PRZED KOMENDĄ. DZIEŃ 1 (16.06)\n(Adam, Olga, sierż. Ćwikliński)\nAdam i Olga spotykają się przed komendą z sierż. Ćwiklińskim (31). Ćwikliński od wejścia zagaduje, czemu detektywi zaczęli się tak nagle interesować zamkniętymi sprawami z ostatniego roku?\n\n7. WN.KOMENDA-RECEPCJA. DZIEŃ 1 (KONTYNUACJA, 16.06)\n(Adam, Olga, Roksana)\nAdam i Olga rozmawiają o spotkaniu z Ćwiklińskim. Do detektywów dołącza Roksana - Olga zleca jej ustawienie rozmów z emerytami.\n\n8. PL. PARKING. DZIEŃ 2 (NASTĘPNEGO DNIA, 7.34)\n(Adam, Artur)\nArtur podchodzi do opartego o radiowóz Adama. Zbijają piątkę. Wyciąga mały świstek starej gazety i pokazuje go Adamowi (PPS1). Detektyw dziękuje Arturowi za spotkanie i wsiada do radiowozu.\n\n9. WN. KOMENDA - GABINET KOMENDANTA. DZIEŃ 2 (9.01)\n(Adam, Olga, Woźniak, Roksana)\nTrwa narada u Woźniaka - Adam referuje, czego dowiedział się na spotkaniu z Arturem. Pokazuje mu wycinek ze starej gazety (PPS1). Roksana odpowiada, że właściciel firmy - Radosław Więcek był już kiedyś notowany za drobne wykroczenia.\n\n10.PL. DOM RADOSŁAWA WIĘCKA - PRZED DOMEM. DZIEŃ 2 (CHWILĘ PÓŹNIEJ, 9:26)\n(Adam, Olga, Radosław Więcek, Benek Więcek)\nDetektywi przyjeżdżają pod dom Radosława Więcka (50). Przed domem stoi jego syn Benek. Radosław Więcek wychodzi do detektywów.\n\n11. WN. KOMENDA - POKÓJ PRZESŁUCHAŃ. DZIEŃ 2 (11.10)\n(Adam, Olga, Radosław Więcek)\nDetektywi przesłuchują Radosława Więcka na komendzie.\n\n12. WN. NIEOZNAKOWANY RADIOWÓZ - PARK. DZIEŃ 2 (13.02)\n(Adam, Olga, Radosław Więcek, Krysia Górska)\nDetektywi obserwują z radiowozu spotkanie w parku.\n\n13. PL. PARK - ALEJKA. DZIEŃ 2 (KONTYNUACJA, 13.05)\n(Roksana, Radosław Więcek, Krysia Górska)\nKrysia Górska (50) spotyka się w parku z Radosławem Więckiem.\n\n14. PL. PARK - ALEJKA/PARKING. DZIEŃ 2 (CHWILĘ PÓŹNIEJ, 13.30)\n(Adam, Olga, Roksana, Krysia Górska, Syn Krysi)\nDetektywi zatrzymują Krysię Górską przy jej samochodzie. Z auta wychodzi Syn Krysi (11).\n\n15. WN. KOMENDA - POKÓJ PRZESŁUCHAŃ. DZIEŃ 2 (14.40)\n(Adam, Olga, Woźniak, Krysia Górska)\nKrysia pokazuje detektywom zdjęcie syna (PPS2), które trzyma w portfelu.\n\n16. WN. KOMENDA - KORYTARZ. DZIEŃ 2 (15.30)\n(Adam, Olga, Roksana, Krysia Górska, Syn Krysi, Mundurowy)\nNa korytarzu komendy Syn Krysi czeka na matkę. Chłopiec rysuje (PPS3).\n\n17.PL. LAS - PARKING PRZY LESIE, DZIEŃ 2 (16.51)\n(Adam, Olga, Krysia Górska, Mundurowy x4)\nW ustronnym miejscu przy lesie detektywi przygotowują Krysię do akcji.\n\n18.PL. LAS - PARKING PRZY LESIE, DZIEŃ 2 (CHWILĘ PÓŹNIEJ, 16.59)\n(Krysia Górska, Ela Nowacka, Mundurowy x4)\nKrysia idzie przez las do punktu zrzutu przy wiacie. Nagle ktoś łapie ją za ramię i odwraca - zamaskowana postać (Ela Nowacka (40)) przystawia Krysi nóż do klatki piersiowej.\nBREAK 2\nAdam w końcu podchodzi do napastnika i zdejmuje mu maskę z twarzy. To Ela Nowacka - inna pielęgniarka pracująca w firmie u Więcka.\n\n19. WN. KOMENDA - POKÓJ PRZESŁUCHAŃ/ZA LUSTREM. DZIEŃ 2 (17.30)\n(Adam, Olga, Roksana, Woźniak, Ela Nowacka)\nDetektywi przesłuchują Elę Nowacką.\n\n20. PL. DOM RADOSŁAWA WIĘCKA - PRZED DOMEM. DZIEŃ 2 (18.10)\n(Adam, Olga, Radosław Więcek-off)\nDetektywi podjeżdżają pod dom Więcka. Słyszą krzyk ze środka domu. Wchodzą do środka z bronią w pogotowiu.\n\n21.WN. DOM RADOSŁAWA WIĘCKA - SALON, DZIEŃ 2 (KONTYNUACJA, 18.12)\n(Adam, Olga, Radosław Więcek)\nW mieszkaniu w salonie detektywi spotykają zakrwawionego, słaniającego się Radosława Więcka. Detektywi wzywają karetkę do Radosława, a sami wychodzą z domu, żeby rozpocząć pościg.\n\n22.WN. NIEOZNAKOWANY RADIOWÓZ - W RUCHU, DZIEŃ 2 (CHWILĘ PÓŹNIEJ, 18.20)\n(Adam, Olga, Benek Więcek)\nAdam i Olga jadą na sygnale nieoznakowanym radiowozem za Benkiem Więckiem.\n\n23.PL. LAS - ALEJKA, DZIEŃ 2 (KONTYNUACJA, 18.20)\n(Adam, Olga, Benek Więcek)\nBenek Więcek wybiega z auta i zaczyna uciekać. Detektywi podążają za nim. Olga zgłasza przez radio, że udało im się zatrzymać podejrzanego.\n\n24.WN. MIESZKANIE EDWARDA - SALON, DZIEŃ 3 (NASTĘPNEGO DNIA,\n11.20)\n(Adam, Krysia Górska, Edward, Pielęgniarz)\nNastępnego dnia Adam zabiera Krysię Górską, żeby złożyć wizytę Edwardowi. Krysia daje Edwardowi rysunek, który jej syn namalował dla Edwarda (PPS3).\nKONIEC\n";
 
 })();
 </script>

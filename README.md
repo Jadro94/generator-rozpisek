@@ -51,7 +51,9 @@ Treść sceny…
 Parser radzi sobie z wariantami spotykanymi w praktyce:
 
 - `WN` / `PL` / `WNĘTRZE` / `PLENER`, z kropką lub bez, ze spacją lub bez
-- separator lokacja–sublokacja: `-`, `–`, `—`
+- separator lokacja–sublokacja: `-`, `–`, `—`, a gdy myślnika nie ma — ukośnik
+  (`NIEOZNAKOWANY RADIOWÓZ/BOCZNA ULICZKA`). Ukośnik wewnątrz samej sublokacji
+  (`PARK - ALEJKA/PARKING`) zostaje nietknięty.
 - pora dnia: `DZIEŃ`, `NOC`, `ŚWIT`, `WIECZÓR`, `RANEK`, `POŁUDNIE`, `ZMIERZCH` (+ numer dnia)
 - adnotacje w nawiasie: `(KONTYNUACJA, 16.06)`, `(CHWILĘ PÓŹNIEJ, 14.59)`, `(NASTĘPNEGO DNIA, 7.34)`
 - nagłówki zawinięte na dwie linie
@@ -98,6 +100,26 @@ Gdy numeracja miałaby się nie zgadzać (bo np. nie zaczyna się od 1),
 zaznacz w Wordzie całość, skopiuj i wklej tekst wprost do aplikacji — wtedy
 numery przeniosą się jako zwykły tekst i nic nie trzeba odtwarzać.
 
+## Sklejanie wariantów tej samej lokacji
+
+Radiowóz bywa zapisywany na kilka sposobów w jednym odcinku:
+`NIEOZNAKOWANY RADIOWÓZ/ULICA (W RUCHU)`, `NIEOZNAKOWANY RADIOWÓZ/BOCZNA ULICZKA`,
+`NIEOZNAKOWANY RADIOWÓZ W RUCHU`, `NIEOZNAKOWANY RADIOWÓZ - PARKING`. Dla produkcji
+to jedna lokacja, więc aplikacja skleja je w jedną pozycję, a to, co stoi po nazwie
+kanonicznej, traktuje jako sublokację:
+
+```
+1. Nieoznakowany radiowóz – 3 sceny dzień, 1 scena noc
+   ○ Ulica (w ruchu) (4, 12)
+   ○ Boczna uliczka (9)
+   ○ Parking (16)
+```
+
+Nazwy kanoniczne bierze z listy **Lokacje stałe** w Ustawieniach — dopisanie tam
+własnej nazwy (np. `karetka`) sprawi, że jej warianty też będą się sklejać.
+Dopasowanie idzie od najdłuższej nazwy, więc `nieoznakowany radiowóz` wygrywa
+z samym `radiowóz`.
+
 ## Co można poprawić w zakładce 2
 
 Zakładka „Rozpiska" to miejsce na korektę tego, co aplikacja odczytała.
@@ -114,6 +136,12 @@ Każda zmiana natychmiast przelicza całą rozpiskę.
 - **Nazwy, wiek i opisy** — wszystko edytowalne wprost w polach.
 - **Lokacje** — nazwa, notatka realizacyjna, przełącznik `stała` / płatna,
   nazwy sublokacji (identyczne nazwy scalają się w jedną pozycję).
+- **Listy scen** — przy każdej postaci, lokacji i sublokacji jest pole `Sceny`,
+  które można nadpisać ręcznie. Numery po przecinku; przy postaci można dopisać
+  `(off)`. Zmiana listy przy lokacji przelicza od nowa podział dzień/noc.
+- **Usuwanie pozycji** — przycisk `usuń` przy postaci, lokacji, sublokacji i PPS-ie.
+  Usunięcie jest trwałe: pozycja nie wraca przy przenumerowaniu scen, zmianie
+  ustawień ani po wczytaniu zapisanego projektu.
 - **PPS i pojazdy** — nazwa, dzień, opis; pojazdy dodaje się i usuwa ręcznie.
 
 Ręcznie poprawione numery scen zapisują się w pliku projektu razem z resztą zmian.
