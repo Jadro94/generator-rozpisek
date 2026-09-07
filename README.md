@@ -51,9 +51,10 @@ zewnętrznych zasobów i działa bez internetu.
 
 ## Dwa źródła: drabinka albo scenariusz
 
-Po przycisku START aplikacja pyta, z czego robimy rozpiskę. Efekt jest ten sam —
-różni się tylko zapis obsady pod nagłówkiem sceny. Wybór można zmienić w każdej
-chwili odnośnikiem „zmień źródło" w zakładce 1.
+Po przycisku START aplikacja pyta, z czego robimy rozpiskę. Wybór przestawia
+całą zakładkę 1 — jej nazwę („Drabinka" albo „Scenariusz"), tytuł, przycisk
+analizy i podpowiedź. Zmienić go można w każdej chwili odnośnikiem
+„zmień źródło" przy tytule zakładki 1.
 
 ### Scenariusz
 
@@ -248,6 +249,9 @@ dla osób, które nie mają konta deweloperskiego.
 - **PPS, pojazdy i podsumowanie** — bez zmian, punktory `●`.
 
 ## Eksport
+
+Nazwy postaci, lokacji i sublokacji są pogrubione — tak samo w podglądzie
+na ekranie i w pobranym pliku `.docx`.
 
 - **Kopiuj do schowka** — sformatowany tekst z punktorami, gotowy do wklejenia
 - **.docx** — dokument Word budowany w przeglądarce, bez żadnych bibliotek; podgląd
