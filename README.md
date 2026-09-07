@@ -49,6 +49,55 @@ kursor w polu tekstowym. Kliknięcie logo w nagłówku wraca na stronę startow�
 Logo jest osadzone w pliku HTML, więc narzędzie nadal jest jednym plikiem bez
 zewnętrznych zasobów i działa bez internetu.
 
+## Dwa źródła: drabinka albo scenariusz
+
+Po przycisku START aplikacja pyta, z czego robimy rozpiskę. Efekt jest ten sam —
+różni się tylko zapis obsady pod nagłówkiem sceny. Wybór można zmienić w każdej
+chwili odnośnikiem „zmień źródło" w zakładce 1.
+
+### Scenariusz
+
+```
+4) PL. PRZED DOMEM SUDECKIEJ/ULICA        DZIEŃ 1 (19:43)
+O: Adam (T), Olga (T), Mundurowy 1, Mundurowy 2 (OFF)
+R: Worek na zwłoki, żółta taśma policyjna
+M: Sudecka (otarcia na szyi)
+K: Jan (kombinezon technika)
+P: Nieoznakowany radiowóz, Radiowóz
+```
+
+- **Obsada** pochodzi z wiersza `O:`. Jeśli scena ma kilka takich wierszy
+  (drugi blok opisuje np. to, co widać na materiale PPS), brane są wszystkie —
+  te postacie też trzeba obsadzić.
+- **Pojazdy** pochodzą z wierszy `P:` i trafiają wprost do listy pojazdów,
+  z numerami scen.
+- **Znacznik `(T)`** oznacza postać z kwestiami. Postać, która nie ma go
+  w żadnej scenie, trafia wstępnie do statystów — chyba że jej imię zachowuje się
+  w tekście jak nazwa własna (zamordowana ofiara widziana tylko na nagraniu,
+  „Mundurowy Edward”). To wciąż tylko podpowiedź: **przejrzyj podział w zakładce 2**
+  i przenieś, co trzeba, jednym kliknięciem.
+- **Tytuły PPS** aplikacja wyłapuje z wierszy `R:` — zapis `PPS2 – nagranie
+  schadzki` sam uzupełnia nazwę materiału.
+- **PPS jako osobna scena.** Gdy wstawka ma własny wiersz `O:`, jest to materiał
+  do nakręcenia osobno. Grające w nim postacie dostają w liście scen pozycję
+  `PPS1`, `PPS2` zamiast numeru sceny — liczy się ona do sumy scen aktora
+  i stoi na końcu listy, za numerami zwykłych scen:
+
+  ```
+  2. Tatiana (29) – 3 (2, PPS1, PPS2)
+  ```
+
+  Numer PPS-u rozpoznajemy po najbliższej wzmiance nad wstawką („na ekranie
+  widać PPS1”). Materiał odtwarzany w kilku scenach figuruje raz, bo kręci się
+  go raz.
+- Wiersze `R:`, `K:`, `M:` nie są poza tym wykorzystywane.
+
+Obsługiwane są też drobne literówki spotykane w praktyce: brak przecinka po
+`(T)` („Roksana (T) Mundurowy 1”), sklejona kropka w nazwie lokacji
+(`MIESZKANIE MIROSŁAWY.SALON`) oraz nagłówki pisane raz wersalikami, raz
+mieszanką — nazwy lokacji są ujednolicane, więc `DOM BRODZKICH` i
+`Dom brodzkich` to jedna pozycja.
+
 ## Rozpoznawany format drabinki
 
 ```
