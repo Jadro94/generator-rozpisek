@@ -253,7 +253,9 @@ dla osób, które nie mają konta deweloperskiego.
 Nazwy postaci, lokacji i sublokacji są pogrubione — tak samo w podglądzie
 na ekranie i w pobranym pliku `.docx`.
 
-- **Kopiuj do schowka** — sformatowany tekst z punktorami, gotowy do wklejenia
+- **Kopiuj do schowka** — do schowka trafia wersja HTML i czysty tekst naraz.
+  Po wklejeniu do Worda listy numerowane, punktory sublokacji i pogrubione nazwy
+  zostają na miejscu; program, który HTML-a nie przyjmuje, dostanie zwykły tekst.
 - **.docx** — dokument Word budowany w przeglądarce, bez żadnych bibliotek; podgląd
   na ekranie i gotowy dokument są w tym samym kroju pisma (Arial)
 - **.txt** — czysty tekst

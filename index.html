@@ -2084,10 +2084,81 @@ function renderPreview(){
 $('#optCounts').addEventListener('change', renderPreview);
 $('#optHeader').addEventListener('change', renderPreview);
 
-$('#btnCopy').addEventListener('click', function(){
-  var t = RPE.blocksToText(currentBlocks());
-  navigator.clipboard.writeText(t).then(function(){ toast('#t3','ok','Skopiowano do schowka.'); },
-    function(){ toast('#t3','err','Przeglądarka zablokowała schowek — pobierz .txt.'); });
+/* Word wkleja listy tylko z formatu HTML — czysty tekst gubi punktory
+   i pogrubienia. Do schowka wkładamy więc obie wersje naraz. */
+function blocksToHtml(blocks){
+  var out = [], lista = null, liOtwarte = false, podlista = false;
+  function zamknijPodliste(){ if (podlista){ out.push('</ul>'); podlista = false; } }
+  function zamknijLi(){ if (liOtwarte){ zamknijPodliste(); out.push('</li>'); liOtwarte = false; } }
+  function zamknijListe(){ zamknijLi(); if (lista){ out.push('</' + lista + '>'); lista = null; } }
+  function tresc(b){
+    if (b.bold && b.text.indexOf(b.bold) === 0)
+      return '<b>' + esc(b.bold) + '</b>' + esc(b.text.slice(b.bold.length));
+    return esc(b.text);
+  }
+  blocks.forEach(function(b){
+    switch (b.style){
+      case 'title':
+        zamknijListe();
+        out.push('<p style="font-size:13pt;margin:0 0 10pt"><b>' + esc(b.text) + '</b></p>');
+        break;
+      case 'h':
+        zamknijListe();
+        out.push('<p style="margin:14pt 0 4pt"><b>' + esc(b.text) + '</b></p>');
+        break;
+      case 'h2':
+        zamknijListe();
+        out.push('<p style="margin:10pt 0 3pt"><b>' + esc(b.text) + '</b></p>');
+        break;
+      case 'li1':
+        var typ = b.num ? 'ol' : 'ul';
+        if (lista && lista !== typ) zamknijListe();
+        zamknijLi();
+        if (!lista){ lista = typ; out.push('<' + typ + ' style="margin:0 0 6pt 0">'); }
+        out.push('<li style="margin-bottom:4pt">' + tresc(b));
+        liOtwarte = true;
+        break;
+      case 'li2':
+        if (!liOtwarte){
+          if (!lista){ lista = 'ul'; out.push('<ul style="margin:0 0 6pt 0">'); }
+          out.push('<li style="margin-bottom:4pt">'); liOtwarte = true;
+        }
+        if (!podlista){ out.push('<ul style="margin:4pt 0 0 0">'); podlista = true; }
+        out.push('<li style="margin-bottom:3pt">' + tresc(b) + '</li>');
+        break;
+      case 'note':
+        if (liOtwarte) out.push('<div style="font-style:italic;margin:3pt 0">' + esc(b.text) + '</div>');
+        else out.push('<p style="font-style:italic;margin:3pt 0 3pt 18pt">' + esc(b.text) + '</p>');
+        break;
+    }
+  });
+  zamknijListe();
+  return '<meta charset="utf-8"><div style="font-family:Arial,Helvetica,sans-serif;font-size:11pt;' +
+         'color:#000">' + out.join('') + '</div>';
+}
+
+$('#btnCopy').addEventListener('click', async function(){
+  var bl = currentBlocks();
+  var tekst = RPE.blocksToText(bl), html = blocksToHtml(bl);
+  try {
+    if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write){
+      await navigator.clipboard.write([ new ClipboardItem({
+        'text/html':  new Blob([html],  { type: 'text/html' }),
+        'text/plain': new Blob([tekst], { type: 'text/plain' })
+      }) ]);
+      toast('#t3','ok','Skopiowano z formatowaniem — po wklejeniu do Worda punktory i pogrubienia zostaną na miejscu.');
+      return;
+    }
+    await navigator.clipboard.writeText(tekst);
+    toast('#t3','warn','Skopiowano jako czysty tekst — ta przeglądarka nie potrafi przekazać formatowania.');
+  } catch(e){
+    try {
+      await navigator.clipboard.writeText(tekst);
+      toast('#t3','warn','Skopiowano jako czysty tekst.');
+    } catch(e2){
+      toast('#t3','err','Przeglądarka zablokowała schowek — pobierz .docx albo .txt.');
+    }
+  }
 });
 $('#btnTxt').addEventListener('click', function(){
   download(fileBase()+'.txt', new Blob([RPE.blocksToText(currentBlocks())], {type:'text/plain;charset=utf-8'}));
