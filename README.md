@@ -43,18 +43,31 @@ API”. Tryb „Kopiuj prompt” działa zawsze — również przy pracy offline
 ## Strona startowa
 
 Aplikacja otwiera się ekranem powitalnym z logo, krótkim opisem i pięcioma krokami
-„Jak to działa?". Przycisk **START** przechodzi do zakładki „Drabinka" i ustawia
-kursor w polu tekstowym. Kliknięcie logo w nagłówku wraca na stronę startową.
+„Jak to działa?". Przycisk **START** prowadzi do ekranu wyboru serialu i źródła. Kliknięcie logo w nagłówku wraca na stronę startową.
 
 Logo jest osadzone w pliku HTML, więc narzędzie nadal jest jednym plikiem bez
 zewnętrznych zasobów i działa bez internetu.
 
-## Dwa źródła: drabinka albo scenariusz
+## Ekran wyboru: serial i źródło
 
-Po przycisku START aplikacja pyta, z czego robimy rozpiskę. Wybór przestawia
-całą zakładkę 1 — jej nazwę („Drabinka" albo „Scenariusz"), tytuł, przycisk
-analizy i podpowiedź. Zmienić go można w każdej chwili odnośnikiem
-„zmień źródło" przy tytule zakładki 1.
+Po przycisku START aplikacja pyta o dwie rzeczy naraz, na jednej karcie:
+
+**Serial** — „Gliniarze" albo „Gliniarze: Śląsk". Wybór podmienia listę postaci
+stałych, bo oba seriale mają osobne obsady. To nie jest kosmetyka: nazwiska się
+gryzą (Kowalski, Kaczmarek, Kruk, Marek, Michał, Piotr), więc jedna wspólna lista
+po cichu awansowałaby epizod „Marta" z Gliniarzy na postać stałą ze Śląska.
+Lokacje stałe i słowa-klucze statystów są wspólne dla obu seriali, więc własne
+zmiany w nich przeżywają przełączenie.
+
+Który serial jest aktywny, widać przez cały czas przy tytule zakładki 1
+i w karcie „Postacie stałe serialu" w Ustawieniach. Wybrany serial zapisuje się
+też w pliku projektu.
+
+**Źródło** — drabinka albo scenariusz. Wybór przestawia całą zakładkę 1: jej nazwę
+(„Drabinka" albo „Scenariusz"), tytuł, przycisk analizy i podpowiedź.
+
+Jedno i drugie zmienisz w każdej chwili odnośnikiem „zmień źródło" przy tytule
+zakładki 1 — wraca on na ten sam ekran wyboru.
 
 ### Scenariusz
 
@@ -216,7 +229,14 @@ Zakładka **Ustawienia** pozwala dostosować narzędzie bez ruszania kodu:
 
 - **Postacie stałe** — lista postaci trafiających do „Listy castingowej”, wraz
   z aliasami (`Janusz Woźniak | Woźniak, Janusz, kom. Woźniak, Komendant`).
-  Parser dopasowuje też formy ze stopniem służbowym.
+  Lista należy do wybranego serialu; „Przywróć domyślne" wraca do obsady tego
+  serialu, nie drugiego. Parser dopasowuje też formy ze stopniem służbowym —
+  skrótem i pełnym słowem, również złożonym („asp. szt. Gucman",
+  „aspirant sztabowy Gucman", „inspektor Rychlik").
+  Domyślna obsada „Gliniarzy: Śląsk" ma aliasy tylko w formach udokumentowanych
+  (imię, nazwisko, pseudonim, zapis ze stopniem). Zdrobnień w rodzaju „Basia"
+  czy „Olek" nie dopisujemy z góry, bo trafiałyby w epizody — dodaj je tutaj,
+  jeśli pojawiają się w Waszych drabinkach.
 - **Słowa-klucze statystów** — nazwy zawierające któreś z tych słów lądują
   domyślnie w statystach.
 - **Lokacje stałe** — nazwy lokacji niepłatnych (komenda, radiowozy).

@@ -126,6 +126,18 @@ body:not(.app-on) header,body:not(.app-on) main{display:none}
   font-family:inherit;color:var(--txt);width:100%}
 .pick-card:hover{border-color:var(--accent);background:#20242f}
 .pick-card h3{margin:0;font-size:19px;font-weight:700}
+.pick-lab{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
+  color:var(--dim);margin:0 0 10px;text-align:left}
+.pick-chips{display:flex;gap:10px;margin:0 0 26px}
+@media(max-width:720px){.pick-chips{flex-direction:column}}
+.pick-chip{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:14px 12px;color:var(--dim);font-family:inherit;font-size:15px;font-weight:600;
+  cursor:pointer;transition:.15s}
+.pick-chip:hover{border-color:var(--accent);color:var(--txt)}
+.pick-chip.on{border-color:var(--accent);background:#20242f;color:#fff}
+.pick-chip.on::before{content:'✓ ';color:var(--accent)}
+.ser-tag{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+  background:#6ea8fe1f;color:var(--accent2);padding:3px 8px;border-radius:5px;margin-left:8px}
 .pick-back{margin-top:30px;background:transparent;border:1px solid var(--line);color:var(--dim);
   border-radius:9px;padding:9px 18px;font-family:inherit;font-size:13px;cursor:pointer}
 .pick-back:hover{color:var(--txt)}
@@ -218,6 +230,12 @@ summary:hover{color:var(--txt)}
     <img class="pick-logo" id="pickLogo" alt="Generator rozpisek — castingi i lokacje">
     <h2 class="pick-h">Z czego robimy rozpiskę?</h2>
     <p class="pick-sub">Generator tworzy rozpiski zarówno z drabinek i scenariuszy.</p>
+    <p class="pick-lab">Serial</p>
+    <div class="pick-chips" id="pickSer">
+      <button class="pick-chip on" data-ser="gliniarze">Gliniarze</button>
+      <button class="pick-chip" data-ser="slask">Gliniarze: Śląsk</button>
+    </div>
+    <p class="pick-lab">Źródło</p>
     <div class="pick-grid">
       <button class="pick-card" id="pickDrab"><h3>Z drabinki</h3></button>
       <button class="pick-card" id="pickScen"><h3>Ze scenariusza</h3></button>
@@ -231,7 +249,7 @@ summary:hover{color:var(--txt)}
 <!-- ============================ TAB 1 ============================ -->
 <section id="t1" class="tab on">
   <div class="card">
-    <h2><span class="n">1</span><span id="srcTitle">Wklej drabinkę odcinka</span><span class="src-tag" id="srcTag">drabinka</span><button class="src-swap" id="srcSwap">zmień źródło</button></h2>
+    <h2><span class="n">1</span><span id="srcTitle">Wklej drabinkę odcinka</span><span class="ser-tag" id="serTag">Gliniarze</span><span class="src-tag" id="srcTag">drabinka</span><button class="src-swap" id="srcSwap">zmień źródło</button></h2>
     <p class="hint" id="srcHint"></p>
     <div class="dropzone" id="drop">Przeciągnij tu plik <b>.docx</b> / <b>.txt</b> / <b>.rtf</b> / <b>.fdx</b> lub kliknij, aby wybrać</div>
     <input type="file" id="file" accept=".docx,.txt,.rtf,.fdx,.md,.text" style="display:none">
@@ -430,8 +448,10 @@ summary:hover{color:var(--txt)}
   </div>
 
   <div class="card">
-    <h2>Postacie stałe serialu</h2>
-    <p class="hint">Jedna postać w wierszu. Format: <span class="kbd">Nazwa kanoniczna | alias, alias, alias</span>.
+    <h2>Postacie stałe serialu<span class="ser-tag" id="serTagCfg">Gliniarze</span></h2>
+    <p class="hint">Lista należy do wybranego serialu — każdy ma własną, bo nazwiska się powtarzają
+      między „Gliniarzami” i „Śląskiem”. Serial zmienisz przyciskiem „zmień źródło” w zakładce 1.<br>
+      Jedna postać w wierszu. Format: <span class="kbd">Nazwa kanoniczna | alias, alias, alias</span>.
       Aliasy to warianty zapisu spotykane w drabinkach (imię, nazwisko, ze stopniem służbowym).</p>
     <textarea id="cfgRegulars" rows="12" class="mono"></textarea>
   </div>
@@ -517,6 +537,40 @@ var DEFAULT_REGULARS = [
   { name: 'Jan',              aliases: ['Jan', 'Janek', 'Janko'] }
 ];
 
+/* Postacie stałe serialu „Gliniarze: Śląsk” (Śląskie CBP, Górnośląsko-
+   Zagłębiowska Metropolia). Źródło: Gliniarze Polska Wiki.
+   Aliasy obejmują tylko formy udokumentowane — imię, nazwisko, pseudonim
+   i zapis ze stopniem. Zdrobnień nie dopisujemy w domyślnej liście, bo
+   trafiłyby w epizody; własne warianty dodasz w zakładce „Ustawienia”. */
+var REGULARS_SLASK = [
+  { name: 'Robert Gucman',    aliases: ['Robert', 'Gucman', 'Gutek', 'asp. szt. Gucman', 'Robert G.'] },
+  { name: 'Igor Kowalski',    aliases: ['Igor', 'Kowalski', 'Kowal', 'asp. Kowalski'] },
+  { name: 'Marta Kaczmarek',  aliases: ['Marta', 'Kaczmarek', 'asp. Kaczmarek'] },
+  { name: 'Piotr Wojnar',     aliases: ['Piotr', 'Wojnar', 'Piter', 'asp. Wojnar'] },
+  { name: 'Barbara Karlicka', aliases: ['Barbara', 'Karlicka', 'asp. Karlicka'] },
+  { name: 'Aleksander Kruk',  aliases: ['Aleksander', 'Kruk', 'asp. Kruk'] },
+  { name: 'Kuczma',           aliases: ['Kuczma', 'asp. Kuczma'] },
+  { name: 'Marek Rychlik',    aliases: ['Marek', 'Rychlik', 'insp. Rychlik', 'komendant Rychlik',
+                                        'naczelnik Rychlik', 'Komendant', 'Naczelnik'] },
+  { name: 'Tomasz Guzowski',  aliases: ['Tomasz', 'Guzowski'] },
+  { name: 'Michał Kozłowski', aliases: ['Michał', 'Kozłowski', 'Miki', 'Michał K.'] },
+  { name: 'Justyna Furman',   aliases: ['Justyna', 'Furman', 'prok. Furman', 'prokurator Furman'] },
+  { name: 'Oskar',            aliases: ['Oskar'] },
+  { name: 'Izabela Kaczmarek',aliases: ['Izabela'] },
+  { name: 'Dawid Gucman',     aliases: ['Dawid'] }
+];
+
+/* Rejestr seriali. Każdy ma własną listę postaci stałych — nazwiska się
+   gryzą między serialami (Kowalski, Kaczmarek, Kruk, Marek, Michał, Piotr),
+   więc trzymanie jednej wspólnej listy dawałoby ciche awanse epizodów
+   na obsadę stałą. Lokacje stałe i słowa-klucze statystów są wspólne. */
+var SERIES = {
+  gliniarze: { label: 'Gliniarze',         short: 'Gliniarze', regulars: DEFAULT_REGULARS },
+  slask:     { label: 'Gliniarze: Śląsk',  short: 'Śląsk',     regulars: REGULARS_SLASK }
+};
+
+var DEFAULT_SERIES = 'gliniarze';
+
 // Postacie tła — jeśli nazwa postaci pasuje do jednego z tych wzorców,
 // trafia domyślnie do sekcji „Statyści”.
 var DEFAULT_EXTRA_WORDS = [
@@ -534,7 +588,7 @@ var DEFAULT_EXTRA_WORDS = [
 // Lokacje stałe (niepłatne).
 var DEFAULT_FIXED_LOCATIONS = [
   'komenda', 'nieoznakowany radiowóz', 'oznakowany radiowóz', 'radiowóz',
-  'cbp', 'kpp', 'komisariat'
+  'cbp', 'sbp', 'śbp', 'kpp', 'komisariat'
 ];
 
 var DAY_WORDS = 'DZIEŃ|DZIEN|NOC|ŚWIT|SWIT|WIECZÓR|WIECZOR|PORANEK|RANEK|POŁUDNIE|POLUDNIE|NAD RANEM|ZMIERZCH';
@@ -618,7 +672,7 @@ function smartCase(upperText, properSet) {
     var k = norm(p);
     var isProper = properSet && properSet[k];
     var out;
-    if (p.length <= 3 && /^(WN|PL|CBP|BSW|KPP|PPS|SUV|TIR)$/i.test(p)) out = p.toUpperCase();
+    if (p.length <= 4 && /^(WN|PL|CBP|CBŚ|CBŚP|ŚBP|SBP|BSW|KPP|KWP|KMP|PPS|SUV|TIR)$/i.test(p)) out = p.toUpperCase();
     else if (isProper || first) out = p.charAt(0).toUpperCase() + p.slice(1).toLowerCase();
     else out = p.toLowerCase();
     first = false;
@@ -866,6 +920,17 @@ function parseCastLine(s) {
 
 /* ---------------------------------------------------------- MODEL DANYCH */
 
+/* Stopnie i funkcje do pominięcia przy dopasowaniu. Powtarzalne, bo zapisy
+   bywają złożone: „aspirant sztabowy Gucman”, „asp. szt. Gucman”,
+   „st. sierż. Nowak”, „inspektor Rychlik”. norm() zdjął już kropki. */
+var RANK_RE = new RegExp('^(?:(?:' + [
+  'det', 'detektyw', 'sierz', 'sierzant', 'asp', 'aspirant', 'szt', 'sztabowy',
+  'st', 'starszy', 'ml', 'mlodszy', 'mlasp', 'kom', 'komisarz',
+  'podkom', 'podkomisarz', 'nadkom', 'nadkomisarz', 'insp', 'inspektor',
+  'prok', 'prokurator', 'kmdt', 'komendant', 'naczelnik',
+  'dr', 'mjr', 'kpt', 'por', 'ppor'
+].join('|') + ')\\s+)+');
+
 function classify(name, cfg) {
   var n = norm(name);
   // ilość typu „Mundurowi x 2 z radiowozem” — do dopasowania bierzemy sam rdzeń
@@ -878,7 +943,7 @@ function classify(name, cfg) {
       var c = norm(cands[j]);
       if (core === c) return { kind: 'regular', canonical: r.name };
       // „sierż. Ćwikliński” vs „Ćwikliński”; „det. Adam Bogusz” vs „Adam Bogusz”
-      var stripped = core.replace(/^(det|sierz|asp|kom|mlasp|st sierz|podkom|nadkom|insp|prok|dr|mjr|kpt|por)\s+/, '');
+      var stripped = core.replace(RANK_RE, '');
       if (stripped === c) return { kind: 'regular', canonical: r.name };
     }
   }
@@ -1335,8 +1400,10 @@ function blocksToText(blocks, o) {
 
 function mergeConfig(cfg) {
   cfg = cfg || {};
+  var ser = SERIES[cfg.series] ? cfg.series : DEFAULT_SERIES;
   return {
-    regulars: cfg.regulars || DEFAULT_REGULARS,
+    series: ser,
+    regulars: cfg.regulars || SERIES[ser].regulars,
     extraWords: cfg.extraWords || DEFAULT_EXTRA_WORDS,
     fixedLocations: cfg.fixedLocations || DEFAULT_FIXED_LOCATIONS
   };
@@ -1362,6 +1429,9 @@ var API = {
   remergeSubs: remergeSubs,
   headcount: headcount,
   DEFAULT_REGULARS: DEFAULT_REGULARS,
+  REGULARS_SLASK: REGULARS_SLASK,
+  SERIES: SERIES,
+  DEFAULT_SERIES: DEFAULT_SERIES,
   DEFAULT_EXTRA_WORDS: DEFAULT_EXTRA_WORDS,
   DEFAULT_FIXED_LOCATIONS: DEFAULT_FIXED_LOCATIONS,
   parseDrabinka: parseDrabinka,
@@ -1397,6 +1467,7 @@ var state = {
   model: null,
   cfg: null,
   zrodlo: 'drabinka',
+  serial: RPE.DEFAULT_SERIES,
   deleted: { people:{}, locs:{}, subs:{}, pps:{} },
   api: { key:'', model:'claude-sonnet-4-5' }
 };
@@ -1438,13 +1509,37 @@ function loadCfgUI(cfg){
 }
 function readCfgUI(){
   return {
+    series: state.serial,
     regulars: textToRegulars($('#cfgRegulars').value),
     extraWords: $('#cfgExtras').value.split(',').map(function(x){return x.trim();}).filter(Boolean),
     fixedLocations: $('#cfgFixed').value.split(',').map(function(x){return x.trim();}).filter(Boolean)
   };
 }
-state.cfg = RPE.mergeConfig({});
+state.cfg = RPE.mergeConfig({ series: state.serial });
 loadCfgUI(state.cfg);
+
+/* Serial decyduje o liście postaci stałych. Lokacje stałe i słowa-klucze
+   statystów są wspólne, więc ręczne zmiany w nich przeżywają przełączenie. */
+function ustawSerial(k, przelicz){
+  if (!RPE.SERIES[k]) return;
+  var zmiana = (k !== state.serial);
+  state.serial = k;
+  var nazwa = RPE.SERIES[k].label;
+  $$('#pickSer .pick-chip').forEach(function(b){
+    b.classList.toggle('on', b.dataset.ser === k);
+  });
+  var t1 = $('#serTag'), t2 = $('#serTagCfg');
+  if (t1) t1.textContent = nazwa;
+  if (t2) t2.textContent = nazwa;
+  if (zmiana){
+    // podmieniamy tylko obsadę; resztę ustawień użytkownika zostawiamy
+    var biez = readCfgUI();
+    state.cfg = { series: k, regulars: RPE.SERIES[k].regulars,
+                  extraWords: biez.extraWords, fixedLocations: biez.fixedLocations };
+    loadCfgUI(state.cfg);
+    if (przelicz && state.parsed) rebuild(true);
+  }
+}
 
 $('#btnCfgSave').addEventListener('click', function(){
   state.cfg = readCfgUI();
@@ -1452,7 +1547,7 @@ $('#btnCfgSave').addEventListener('click', function(){
   else toast('#t5','ok','Ustawienia zapisane.');
 });
 $('#btnCfgReset').addEventListener('click', function(){
-  state.cfg = RPE.mergeConfig({}); loadCfgUI(state.cfg);
+  state.cfg = RPE.mergeConfig({ series: state.serial }); loadCfgUI(state.cfg);
   if (state.parsed) rebuild(true);
 });
 $('#apiKey').addEventListener('input', function(){ state.api.key = this.value.trim(); });
@@ -2567,6 +2662,7 @@ $('#btnSaveProj').addEventListener('click', function(){
     meta: { title:$('#mTitle').value, ep:$('#mEp').value, epg:$('#mEpG').value, pair:$('#mPair').value },
     summary: $('#sumText').value,
     zrodlo: state.zrodlo,
+    serial: state.serial,
     deleted: state.deleted,
     sceneNumbers: state.parsed ? state.parsed.scenes.map(function(sc){
       return { n: sc.number, a: !!sc.autoNumbered };
@@ -2586,7 +2682,9 @@ $('#projFile').addEventListener('change', function(){
     try{
       var p = JSON.parse(String(r.result));
       $('#src').value = p.src || '';
-      if (p.cfg){ state.cfg = p.cfg; loadCfgUI(state.cfg); }
+      if (p.serial && RPE.SERIES[p.serial]) ustawSerial(p.serial, false);
+      if (p.cfg){ state.cfg = RPE.mergeConfig(p.cfg); loadCfgUI(state.cfg);
+                  if (state.cfg.series) ustawSerial(state.cfg.series, false); }
       state.deleted = p.deleted || { people:{}, locs:{}, subs:{}, pps:{} };
       if (p.zrodlo && ZRODLA[p.zrodlo]) ustawZrodlo(p.zrodlo);
       state.src = $('#src').value;
@@ -2675,6 +2773,9 @@ function wejdzDoAplikacji(k){
 }
 
 $('#btnStart').addEventListener('click', pokazWybor);
+$$('#pickSer .pick-chip').forEach(function(b){
+  b.addEventListener('click', function(){ ustawSerial(b.dataset.ser, true); });
+});
 $('#pickDrab').addEventListener('click', function(){ wejdzDoAplikacji('drabinka'); });
 $('#pickScen').addEventListener('click', function(){ wejdzDoAplikacji('scenariusz'); });
 $('#srcSwap').addEventListener('click', pokazWybor);
@@ -2711,6 +2812,7 @@ $('#hdrLogo').addEventListener('click', function(){
   });
 })();
 
+ustawSerial(RPE.DEFAULT_SERIES, false);
 ustawZrodlo('drabinka');
 
 
